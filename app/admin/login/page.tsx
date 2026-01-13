@@ -48,8 +48,7 @@ if (profileError) throw profileError
         throw new Error("Acesso negado. Você não tem permissões de administrador.")
       }
 
-      router.push("/admin")
-      router.refresh()
+      await router.push("/admin")
     } catch (err: any) {
       setError(err.message || "Erro ao fazer login")
     } finally {
