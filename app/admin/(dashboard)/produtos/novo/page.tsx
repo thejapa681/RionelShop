@@ -254,23 +254,22 @@ return (
         className="hidden"
         onChange={async (e) => {
           const file = e.target.files?.[0]
-          if (!file) return
+if (!file) return
 
-          const supabase = createClient()
+const supabase = createClient()
 
-          const ext = file.name.split(".").pop()
-          const fileName = `${crypto.randomUUID()}.${ext}`
-          const filePath = `products/${fileName}`
+const ext = file.name.split(".").pop()
+const fileName = `${crypto.randomUUID()}.${ext}`
+const filePath = fileName
 
-          const { error } = await supabase.storage
+const { error } = await supabase.storage
   .from("products")
-  .upload(fileName, file, {
+  .upload(filePath, file, {
     contentType: file.type,
     upsert: false,
   })
 
-          if (error) {
-  console.error(error)
+if (error) {
   toast({
     title: "Erro",
     description: error.message,
@@ -279,20 +278,12 @@ return (
   return
 }
 
-          const { data } = supabase.storage
-            .from("products")
-            .getPublicUrl(filePath)
+const { data } = supabase.storage
+  .from("products")
+  .getPublicUrl(filePath)
 
-          if (!data?.publicUrl) {
-            toast({
-              title: "Erro",
-              description: "Erro ao gerar URL da imagem",
-              variant: "destructive",
-            })
-            return
-          }
-
-          setImages((prev) => [...prev, data.publicUrl])
+setImages((prev) => [...prev, data.publicUrl])
+e.currentTarget.value = ""
 
           // limpa o input para permitir enviar a mesma imagem novamente
           e.currentTarget.value = ""
