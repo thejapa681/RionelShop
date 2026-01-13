@@ -17,9 +17,7 @@ export default function DeleteButton({ id }: DeleteButtonProps) {
   const handleDelete = async () => {
     setIsDeleting(true)
     try {
-      const res = await fetch(`/api/products/${id}`, {
-        method: "DELETE",
-      })
+      const res = await fetch(`/api/products/${id}`, { method: "DELETE" })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Não foi possível excluir o produto")
 
@@ -30,7 +28,7 @@ export default function DeleteButton({ id }: DeleteButtonProps) {
       })
 
       setIsOpen(false)
-      location.reload() // opcional: você pode atualizar o estado da lista ao invés de reload
+      location.reload()
     } catch (err: any) {
       toast({
         title: "Erro",
@@ -44,29 +42,32 @@ export default function DeleteButton({ id }: DeleteButtonProps) {
 
   return (
     <>
+      {/* Botão de deletar */}
       <Button
         variant="ghost"
         size="icon"
-        className="flex w-full items-center gap-2 text-destructive"
+        className="flex items-center gap-2 text-destructive"
         onClick={() => setIsOpen(true)}
       >
         <Trash2 className="h-4 w-4" />
         Excluir
       </Button>
 
+      {/* Modal Pop-up */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-opacity">
-          <div className="bg-purple-800 text-white rounded-2xl shadow-xl w-96 p-6 relative animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-purple-900 text-white rounded-3xl shadow-2xl w-96 p-6 relative transform transition-all duration-300 scale-100">
+            
             {/* Botão de fechar */}
             <button
-              className="absolute top-3 right-3 text-white hover:text-gray-300"
+              className="absolute top-4 right-4 text-white hover:text-gray-300"
               onClick={() => setIsOpen(false)}
             >
               <X className="h-5 w-5" />
             </button>
 
-            {/* Conteúdo do modal */}
-            <h2 className="text-lg font-bold mb-3">Confirmar exclusão</h2>
+            {/* Título e mensagem */}
+            <h2 className="text-xl font-bold mb-3">Confirmar exclusão</h2>
             <p className="mb-6 text-sm">
               Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.
             </p>
