@@ -35,7 +35,13 @@ export default function AdminLoginPage() {
       if (signInError) throw signInError
 
       // Check if user is admin
-      const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single()
+      const { data: profile, error: profileError } = await supabase
+  .from("profiles")
+  .select("is_admin")
+  .eq("id", data.user.id)
+  .single()
+
+if (profileError) throw profileError
 
       if (profile?.role !== "admin") {
         await supabase.auth.signOut()
