@@ -334,6 +334,7 @@ return (
     </div>
   </CardContent>
 </Card>
+         <Card>
           <CardHeader>  
             <CardTitle>Preços</CardTitle>  
           </CardHeader>  
