@@ -238,44 +238,62 @@ export default function NewProductPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Imagens</CardTitle>
-                <CardDescription>Adicione URLs de imagens do produto</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="URL da imagem"
-                    value={newImageUrl}
-                    onChange={(e) => setNewImageUrl(e.target.value)}
-                  />
-                  <Button type="button" onClick={addImage}>
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
+  <CardTitle>Imagens</CardTitle>
+  <CardDescription>Adicione imagens do produto</CardDescription>
+</CardHeader>
 
-                <div className="grid grid-cols-4 gap-4">
-                  {images.map((url, index) => (
-                    <div key={index} className="relative aspect-square overflow-hidden rounded-lg border">
-                      <img src={url || "/placeholder.svg"} alt="" className="h-full w-full object-cover" />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute right-1 top-1 h-6 w-6"
-                        onClick={() => removeImage(index)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                      {index === 0 && (
-                        <span className="absolute bottom-1 left-1 rounded bg-primary px-2 py-0.5 text-[10px] text-primary-foreground">
-                          Principal
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+<CardContent className="space-y-4">
+  <div className="flex gap-2">
+    <Input
+      type="file"
+      accept="image/*"
+      onChange={async (e) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        const supabase = createClient()
+
+        const fileExt = file.name.split(".").pop()
+        const fileName = `${crypto.randomUUID()}.${fileExt}`
+        const filePath = fileName
+
+        const { error: uploadError } = await supabase.storage
+          .from("products")
+          .upload(filePath, file)
+
+        if (uploadError) return
+
+        const { data } = supabase.storage
+          .from("products")
+          .getPublicUrl(filePath)
+
+        setImages((prev) => [...prev, data.publicUrl])
+      }}
+    />
+  </div>
+
+  <div className="grid grid-cols-4 gap-4">
+    {images.map((url, index) => (
+      <div key={index} className="relative aspect-square overflow-hidden rounded-lg border">
+        <img src={url} alt="" className="h-full w-full object-cover" />
+        <Button
+          type="button"
+          variant="destructive"
+          size="icon"
+          className="absolute right-1 top-1 h-6 w-6"
+          onClick={() => setImages(images.filter((_, i) => i !== index))}
+        >
+          <X className="h-3 w-3" />
+        </Button>
+        {index === 0 && (
+          <span className="absolute bottom-1 left-1 rounded bg-primary px-2 py-0.5 text-[10px] text-primary-foreground">
+            Principal
+          </span>
+        )}
+      </div>
+    ))}
+  </div>
+</CardContent>
 
             <Card>
               <CardHeader>
