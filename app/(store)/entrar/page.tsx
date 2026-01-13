@@ -33,11 +33,11 @@ export default function LoginPage() {
       const supabase = createClient()
 
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+  email,
+  password,
+})
 
-      if (error) throw error
+if (error) throw error
 
       // redireciona apenas após login concluído
       await router.push(redirect)
