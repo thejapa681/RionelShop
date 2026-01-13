@@ -142,18 +142,17 @@ try {
 
   if (productError) throw productError  
 
-  if (images.length > 0 && product?.id) {
+  if (images.length > 0 && product) {
   const imageInserts = images.map((url, index) => ({
     product_id: product.id,
-    url,
+    url: url || "",
     is_primary: index === 0,
     sort_order: index,
   }))
 
-  const { data: insertedImages, error: imageError } = await supabase
-    .from("product_images")
-    .insert(imageInserts)
-    .select()
+  const { error } = await supabase.from("product_images").insert(imageInserts)
+  if (error) throw error
+}
 
   if (imageError) throw imageError
 }
@@ -281,10 +280,19 @@ return (
   }
 
   const { data } = supabase.storage
-    .from("products")
-    .getPublicUrl(fileName)
+  .from("products")
+  .getPublicUrl(fileName)
 
-  setImages((prev) => [...prev, data.publicUrl])
+if (!data?.publicUrl) {
+  toast({
+    title: "Erro",
+    description: "Erro ao gerar URL da imagem",
+    variant: "destructive",
+  })
+  return
+}
+
+setImages((prev) => [...prev, data.publicUrl])
 
   e.currentTarget.value = ""
 }}
