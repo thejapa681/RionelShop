@@ -8,6 +8,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Plus, Search, MoreHorizontal, Pencil, Trash2, Eye } from "lucide-react"
 import { formatCurrency } from "@/lib/utils/format"
 import Link from "next/link"
+import { revalidatePath } from "next/cache"
+
+async function deleteProduct(id: string) {
+  "use server"
+  const supabase = await createClient()
+  await supabase.from("products").delete().eq("id", id)
+  revalidatePath("/admin/produtos")
+}
 
 export default async function AdminProductsPage() {
   const supabase = await createClient()
@@ -120,14 +128,18 @@ export default async function AdminProductsPage() {
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
-                            <Link href={`/admin/produtos/${product.id}`}>
+                            <Link href={`/admin/produtos/editar/${product.id}`}>
                               <Pencil className="mr-2 h-4 w-4" />
                               Editar
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Excluir
+                          <DropdownMenuItem asChild>
+                            <form action={deleteProduct.bind(null, product.id)}>
+                              <button type="submit" className="flex w-full items-center text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Excluir
+                              </button>
+                            </form>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
