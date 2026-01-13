@@ -1,4 +1,4 @@
-import type React from "react"
+import type React from "react" 
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
