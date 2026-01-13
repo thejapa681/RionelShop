@@ -1,17 +1,31 @@
+"use client"
+
 import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Plus, Search, MoreHorizontal, Pencil, Trash2, Eye } from "lucide-react"
 import { formatCurrency } from "@/lib/utils/format"
 import Link from "next/link"
 import { revalidatePath } from "next/cache"
+import { useRouter } from "next/navigation"
 
 async function deleteProduct(id: string) {
-  "use server"
   const supabase = await createClient()
   await supabase.from("products").delete().eq("id", id)
   revalidatePath("/admin/produtos")
@@ -19,6 +33,7 @@ async function deleteProduct(id: string) {
 
 export default async function AdminProductsPage() {
   const supabase = await createClient()
+  const router = useRouter()
 
   const { data: products } = await supabase
     .from("products")
@@ -28,6 +43,11 @@ export default async function AdminProductsPage() {
       product_images(url, is_primary)
     `)
     .order("created_at", { ascending: false })
+
+  async function handleDelete(id: string) {
+    await deleteProduct(id)
+    router.refresh()
+  }
 
   return (
     <div className="space-y-6">
@@ -55,7 +75,7 @@ export default async function AdminProductsPage() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <Table className="min-w-full">
+            <Table className="w-full min-w-[600px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Produto</TableHead>
@@ -133,24 +153,34 @@ export default async function AdminProductsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild>
-                              <Link href={`/produto/${product.slug}`} target="_blank" className="flex items-center gap-2">
+                              <Link
+                                href={`/produto/${product.slug}`}
+                                target="_blank"
+                                className="flex items-center gap-2"
+                              >
                                 <Eye className="h-4 w-4" />
                                 Ver
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href={`/admin/produtos/editar/${product.id}`} className="flex items-center gap-2">
+                              <Link
+                                href={`/admin/produtos/editar/${product.id}`}
+                                className="flex items-center gap-2"
+                              >
                                 <Pencil className="h-4 w-4" />
                                 Editar
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <form action={deleteProduct.bind(null, product.id)}>
-                                <button type="submit" className="flex w-full items-center gap-2 text-destructive">
-                                  <Trash2 className="h-4 w-4" />
-                                  Excluir
-                                </button>
-                              </form>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="flex w-full items-center gap-2 text-destructive"
+                                onClick={() => handleDelete(product.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Excluir
+                              </Button>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
