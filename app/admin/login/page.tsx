@@ -38,7 +38,7 @@ if (error) throw error
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("is_admin")
-        .eq("user_id", data.user.id) // corrigido
+        .eq("id", data.user.id) // corrigido
         .single()
 
       if (profileError) throw profileError
