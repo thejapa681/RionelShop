@@ -116,45 +116,45 @@ try {
   const supabase = createClient()
 
   const { data: product, error: productError } = await supabase
-    .from("products")
-    .insert({
-      name: formData.name,
-      slug: formData.slug,
-      description: formData.description,
-      short_description: formData.short_description,
-      sku: formData.sku || `SKU-${Date.now()}`,
-      price: Number.parseFloat(formData.price) || 0,
-      compare_price: formData.compare_price ? Number.parseFloat(formData.compare_price) : null,
-      cost_price: formData.cost_price ? Number.parseFloat(formData.cost_price) : null,
-      stock: Number.parseInt(formData.stock) || 0,
-      category_id: formData.category_id || null,
-      brand: formData.brand || null,
-      weight: formData.weight ? Number.parseFloat(formData.weight) : null,
-      is_active: formData.is_active,
-      is_featured: formData.is_featured,
-      is_new: formData.is_new,
-      colors: colors.length > 0 ? colors : null,
-      sizes: sizes.length > 0 ? sizes : null,
-    })
-    .select()
-    .single()
+  .from("products")
+  .insert({
+    name: formData.name,
+    slug: formData.slug,
+    description: formData.description,
+    short_description: formData.short_description,
+    sku: formData.sku || `SKU-${Date.now()}`,
+    price: Number.parseFloat(formData.price) || 0,
+    compare_price: formData.compare_price ? Number.parseFloat(formData.compare_price) : null,
+    cost_price: formData.cost_price ? Number.parseFloat(formData.cost_price) : null,
+    stock: Number.parseInt(formData.stock) || 0,
+    category_id: formData.category_id || null,
+    brand: formData.brand || null,
+    weight: formData.weight ? Number.parseFloat(formData.weight) : null,
+    is_active: formData.is_active,
+    is_featured: formData.is_featured,
+    is_new: formData.is_new,
+    colors: colors.length > 0 ? colors : null,
+    sizes: sizes.length > 0 ? sizes : null,
+  })
+  .select()
+  .single()
 
-  if (productError) throw productError
+if (productError || !product) throw productError || new Error("Erro ao criar produto")
 
-  if (images.length > 0 && product) {
-    const imageInserts = images.map((url, index) => ({
-      product_id: product.id,
-      url,
-      is_primary: index === 0,
-      sort_order: index,
-    }))
+if (images.length > 0) {
+  const imageInserts = images.map((url, index) => ({
+    product_id: product.id,
+    url,
+    is_primary: index === 0,
+    sort_order: index,
+  }))
 
-    const { error: imageError } = await supabase
-      .from("product_images")
-      .insert(imageInserts)
+  const { error: imageError } = await supabase
+    .from("product_images")
+    .insert(imageInserts)
 
-    if (imageError) throw imageError
-  }
+  if (imageError) throw imageError
+}
 
   toast({
     title: "Produto criado",
