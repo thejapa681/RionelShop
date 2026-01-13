@@ -33,22 +33,22 @@ export default function AdminLoginPage() {
       })
 
       if (signInError) throw signInError
+      if (!data.user) throw new Error("Usuário não encontrado")
 
-      // Check if user is admin
       const { data: profile, error: profileError } = await supabase
-  .from("profiles")
-  .select("is_admin")
-  .eq("id", data.user.id)
-  .single()
+        .from("profiles")
+        .select("is_admin")
+        .eq("user_id", data.user.id) // corrigido
+        .single()
 
-if (profileError) throw profileError
+      if (profileError) throw profileError
 
-      if (profile?.role !== "admin") {
+      if (!profile?.is_admin) { // corrigido
         await supabase.auth.signOut()
         throw new Error("Acesso negado. Você não tem permissões de administrador.")
       }
 
-      await router.push("/admin")
+      await router.push("/admin") // await garante que não haja AbortError
     } catch (err: any) {
       setError(err.message || "Erro ao fazer login")
     } finally {
