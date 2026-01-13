@@ -1,5 +1,3 @@
-"use client"
-
 import { createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -19,22 +17,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, Eye } from "lucide-react"
+import { Plus, Search, MoreHorizontal, Pencil, Eye } from "lucide-react"
 import { formatCurrency } from "@/lib/utils/format"
 import Link from "next/link"
-import { revalidatePath } from "next/cache"
-import { useRouter } from "next/navigation"
-
-async function deleteProduct(id: string) {
-  const supabase = await createClient()
-  await supabase.from("products").delete().eq("id", id)
-  revalidatePath("/admin/produtos")
-}
+import DeleteButton from "@/components/DeleteButton"
 
 export default async function AdminProductsPage() {
   const supabase = await createClient()
-  const router = useRouter()
-
   const { data: products } = await supabase
     .from("products")
     .select(`
@@ -43,11 +32,6 @@ export default async function AdminProductsPage() {
       product_images(url, is_primary)
     `)
     .order("created_at", { ascending: false })
-
-  async function handleDelete(id: string) {
-    await deleteProduct(id)
-    router.refresh()
-  }
 
   return (
     <div className="space-y-6">
@@ -91,7 +75,6 @@ export default async function AdminProductsPage() {
                   const primaryImage =
                     product.product_images?.find((img: any) => img.is_primary)?.url ||
                     product.product_images?.[0]?.url
-
                   return (
                     <TableRow key={product.id}>
                       <TableCell>
@@ -111,7 +94,9 @@ export default async function AdminProductsPage() {
                           </div>
                           <div className="truncate">
                             <p className="font-medium truncate">{product.name}</p>
-                            <p className="text-xs text-muted-foreground truncate">SKU: {product.sku}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              SKU: {product.sku}
+                            </p>
                           </div>
                         </div>
                       </TableCell>
@@ -172,15 +157,7 @@ export default async function AdminProductsPage() {
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="flex w-full items-center gap-2 text-destructive"
-                                onClick={() => handleDelete(product.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                Excluir
-                              </Button>
+                              <DeleteButton id={product.id} />
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
