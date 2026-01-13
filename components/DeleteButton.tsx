@@ -1,21 +1,50 @@
-import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/client"
+"use client"
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const supabase = createClient()
-  const productId = params.id
+import { Button } from "@/components/ui/button"
+import { Trash2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
-  try {
-    await supabase.from("product_images").delete().eq("product_id", productId)
-    const { error: productError } = await supabase.from("products").delete().eq("id", productId)
+interface DeleteButtonProps {
+  id: string
+}
 
-    if (productError) throw productError
+export default function DeleteButton({ id }: DeleteButtonProps) {
+  const { toast } = useToast()
 
-    return NextResponse.json({ message: "Produto excluído com sucesso" })
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || "Erro ao excluir produto" },
-      { status: 500 }
-    )
+  async function handleDelete() {
+    const confirmed = confirm("Tem certeza que deseja excluir este produto?")
+    if (!confirmed) return
+
+    const res = await fetch(`/api/products/${id}`, {
+      method: "DELETE",
+    })
+
+    if (res.ok) {
+      toast({
+        title: "Produto excluído",
+        description: "O produto foi removido com sucesso!",
+        variant: "destructive",
+      })
+      location.reload()
+    } else {
+      const data = await res.json()
+      toast({
+        title: "Erro",
+        description: data.error || "Não foi possível excluir o produto.",
+        variant: "destructive",
+      })
+    }
   }
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="flex w-full items-center gap-2 text-destructive"
+      onClick={handleDelete}
+    >
+      <Trash2 className="h-4 w-4" />
+      Excluir
+    </Button>
+  )
 }
