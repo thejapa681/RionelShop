@@ -20,7 +20,6 @@ import {
 import { Plus, Search, MoreHorizontal, Pencil, Eye } from "lucide-react"
 import { formatCurrency } from "@/lib/utils/format"
 import Link from "next/link"
-import DeleteButton from "@/components/DeleteButton"
 
 export default async function AdminProductsPage() {
   const supabase = await createClient()
@@ -156,9 +155,39 @@ export default async function AdminProductsPage() {
                                 Editar
                               </Link>
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <DeleteButton id={product.id} />
-                            </DropdownMenuItem>
+                           <DropdownMenuItem>
+  <button
+    className="flex w-full items-center gap-2 text-destructive"
+    onClick={async () => {
+      if (!confirm("Tem certeza que deseja excluir este produto?")) return
+
+      try {
+        const res = await fetch(`/api/products/${product.id}`, {
+          method: "DELETE",
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || "Não foi possível excluir o produto")
+
+        toast({
+          title: "Produto excluído",
+          description: "O produto foi removido com sucesso!",
+          variant: "destructive",
+        })
+
+        location.reload()
+      } catch (err: any) {
+        toast({
+          title: "Erro",
+          description: err.message,
+          variant: "destructive",
+        })
+      }
+    }}
+  >
+    <Trash2 className="h-4 w-4" />
+    Excluir
+  </button>
+</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
