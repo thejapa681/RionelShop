@@ -2,12 +2,15 @@
 
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 interface DeleteButtonProps {
   id: string
 }
 
 export default function DeleteButton({ id }: DeleteButtonProps) {
+  const { toast } = useToast()
+
   async function handleDelete() {
     const confirmed = confirm("Tem certeza que deseja excluir este produto?")
     if (!confirmed) return
@@ -17,10 +20,18 @@ export default function DeleteButton({ id }: DeleteButtonProps) {
     })
 
     if (res.ok) {
-      alert("Produto excluído com sucesso!")
+      toast({
+        title: "Produto excluído",
+        description: "O produto foi removido com sucesso!",
+        variant: "destructive",
+      })
       location.reload()
     } else {
-      alert("Erro ao excluir produto.")
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o produto.",
+        variant: "destructive",
+      })
     }
   }
 
