@@ -142,17 +142,21 @@ try {
 
   if (productError) throw productError  
 
-  // Add images  
-  if (images.length > 0 && product) {  
-    const imageInserts = images.map((url, index) => ({  
-      product_id: product.id,  
-      url,  
-      is_primary: index === 0,  
-      sort_order: index,  
-    }))  
+  if (images.length > 0 && product?.id) {
+  const imageInserts = images.map((url, index) => ({
+    product_id: product.id,
+    url,
+    is_primary: index === 0,
+    sort_order: index,
+  }))
 
-    await supabase.from("product_images").insert(imageInserts)  
-  }  
+  const { data: insertedImages, error: imageError } = await supabase
+    .from("product_images")
+    .insert(imageInserts)
+    .select()
+
+  if (imageError) throw imageError
+}
 
   toast({  
     title: "Produto criado",  
@@ -236,8 +240,7 @@ return (
             </div>  
           </CardContent>  
         </Card>  
-
-       <Card>
+<Card>
   <CardHeader>
     <CardTitle>Imagens</CardTitle>
     <CardDescription>Adicione imagens do produto</CardDescription>
@@ -322,6 +325,7 @@ return (
     </div>
   </CardContent>
 </Card>
+       
          <Card>
           <CardHeader>  
             <CardTitle>Preços</CardTitle>  
