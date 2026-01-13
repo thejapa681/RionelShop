@@ -294,6 +294,7 @@ export default function NewProductPage() {
     ))}
   </div>
 </CardContent>
+</Card>
 
             <Card>
               <CardHeader>
