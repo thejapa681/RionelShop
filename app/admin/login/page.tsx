@@ -32,7 +32,7 @@ const { data, error } = await supabase.auth.signInWithPassword({
   password,
 })
 
-      if (signInError) throw signInError
+if (error) throw error
       if (!data.user) throw new Error("Usuário não encontrado")
 
       const { data: profile, error: profileError } = await supabase
