@@ -237,7 +237,7 @@ return (
           </CardContent>  
         </Card>  
 
-        <Card>
+       <Card>
   <CardHeader>
     <CardTitle>Imagens</CardTitle>
     <CardDescription>Adicione imagens do produto</CardDescription>
@@ -247,6 +247,7 @@ return (
     <label className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-purple-500 bg-purple-50 px-4 py-6 text-purple-700 transition hover:bg-purple-100">
       <Plus className="mr-2 h-5 w-5" />
       <span className="font-medium">Adicionar imagem</span>
+
       <input
         type="file"
         accept="image/*"
@@ -256,12 +257,17 @@ return (
           if (!file) return
 
           const supabase = createClient()
+
           const ext = file.name.split(".").pop()
           const fileName = `${crypto.randomUUID()}.${ext}`
+          const filePath = `products/${fileName}`
 
           const { error } = await supabase.storage
             .from("products")
-            .upload(fileName, file)
+            .upload(filePath, file, {
+              contentType: file.type,
+              upsert: false,
+            })
 
           if (error) {
             toast({
@@ -274,9 +280,21 @@ return (
 
           const { data } = supabase.storage
             .from("products")
-            .getPublicUrl(fileName)
+            .getPublicUrl(filePath)
+
+          if (!data?.publicUrl) {
+            toast({
+              title: "Erro",
+              description: "Erro ao gerar URL da imagem",
+              variant: "destructive",
+            })
+            return
+          }
 
           setImages((prev) => [...prev, data.publicUrl])
+
+          // limpa o input para permitir enviar a mesma imagem novamente
+          e.currentTarget.value = ""
         }}
       />
     </label>
@@ -315,7 +333,6 @@ return (
     </div>
   </CardContent>
 </Card>
-<Card>  
           <CardHeader>  
             <CardTitle>Preços</CardTitle>  
           </CardHeader>  
