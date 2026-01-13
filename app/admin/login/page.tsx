@@ -27,10 +27,10 @@ export default function AdminLoginPage() {
     try {
       const supabase = createClient()
 
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+const { data, error } = await supabase.auth.signInWithPassword({
+  email,
+  password,
+})
 
       if (signInError) throw signInError
       if (!data.user) throw new Error("Usuário não encontrado")
