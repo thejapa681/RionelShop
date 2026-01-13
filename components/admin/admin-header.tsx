@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, Menu, Search } from "lucide-react"
+import { Bell, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -12,8 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { AdminSidebar } from "./admin-sidebar"
 import type { Profile } from "@/lib/types"
 
 interface AdminHeaderProps {
@@ -23,21 +21,6 @@ interface AdminHeaderProps {
 export function AdminHeader({ admin }: AdminHeaderProps) {
   return (
     <header className="flex h-16 items-center gap-4 border-b border-border bg-card px-6">
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
-        </SheetTrigger>
-
-        <SheetContent
-          side="left"
-          className="fixed inset-y-0 left-0 w-64 bg-card p-4 flex flex-col overflow-y-auto"
-        >
-          <AdminSidebar />
-        </SheetContent>
-      </Sheet>
-
       <div className="hidden flex-1 md:block">
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
