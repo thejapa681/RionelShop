@@ -263,20 +263,21 @@ return (
           const filePath = `products/${fileName}`
 
           const { error } = await supabase.storage
-            .from("products")
-            .upload(filePath, file, {
-              contentType: file.type,
-              upsert: false,
-            })
+  .from("products")
+  .upload(fileName, file, {
+    contentType: file.type,
+    upsert: false,
+  })
 
           if (error) {
-            toast({
-              title: "Erro",
-              description: "Erro ao enviar imagem",
-              variant: "destructive",
-            })
-            return
-          }
+  console.error(error)
+  toast({
+    title: "Erro",
+    description: error.message,
+    variant: "destructive",
+  })
+  return
+}
 
           const { data } = supabase.storage
             .from("products")
