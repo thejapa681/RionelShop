@@ -1,4 +1,6 @@
-import { createClient } from "@/lib/supabase/server"
+"use client"
+
+import { useState } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -17,20 +19,45 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Plus, Search, MoreHorizontal, Pencil, Eye } from "lucide-react"
-import { formatCurrency } from "@/lib/utils/format"
+import { Plus, Search, MoreHorizontal, Pencil, Eye, Trash2 } from "lucide-react"
 import Link from "next/link"
+import { formatCurrency } from "@/lib/utils/format"
+import { useToast } from "@/hooks/use-toast"
 
-export default async function AdminProductsPage() {
-  const supabase = await createClient()
-  const { data: products } = await supabase
-    .from("products")
-    .select(`
-      *,
-      category:categories(name),
-      product_images(url, is_primary)
-    `)
-    .order("created_at", { ascending: false })
+interface ProductsTableProps {
+  products: any[]
+}
+
+export default function ProductsTable({ products }: ProductsTableProps) {
+  const { toast } = useToast()
+  const [loadingIds, setLoadingIds] = useState<string[]>([])
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este produto?")) return
+    setLoadingIds((prev) => [...prev, id])
+
+    try {
+      const res = await fetch(`/api/products/${id}`, { method: "DELETE" })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Não foi possível excluir o produto")
+
+      toast({
+        title: "Produto excluído",
+        description: "O produto foi removido com sucesso!",
+        variant: "destructive",
+      })
+
+      location.reload()
+    } catch (err: any) {
+      toast({
+        title: "Erro",
+        description: err.message,
+        variant: "destructive",
+      })
+    } finally {
+      setLoadingIds((prev) => prev.filter((i) => i !== id))
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -41,8 +68,7 @@ export default async function AdminProductsPage() {
         </div>
         <Button asChild>
           <Link href="/admin/produtos/novo" className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Novo Produto
+            <Plus className="h-4 w-4" /> Novo Produto
           </Link>
         </Button>
       </div>
@@ -70,7 +96,7 @@ export default async function AdminProductsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {products?.map((product: any) => {
+                {products.map((product) => {
                   const primaryImage =
                     product.product_images?.find((img: any) => img.is_primary)?.url ||
                     product.product_images?.[0]?.url
@@ -155,39 +181,16 @@ export default async function AdminProductsPage() {
                                 Editar
                               </Link>
                             </DropdownMenuItem>
-                           <DropdownMenuItem>
-  <button
-    className="flex w-full items-center gap-2 text-destructive"
-    onClick={async () => {
-      if (!confirm("Tem certeza que deseja excluir este produto?")) return
-
-      try {
-        const res = await fetch(`/api/products/${product.id}`, {
-          method: "DELETE",
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || "Não foi possível excluir o produto")
-
-        toast({
-          title: "Produto excluído",
-          description: "O produto foi removido com sucesso!",
-          variant: "destructive",
-        })
-
-        location.reload()
-      } catch (err: any) {
-        toast({
-          title: "Erro",
-          description: err.message,
-          variant: "destructive",
-        })
-      }
-    }}
-  >
-    <Trash2 className="h-4 w-4" />
-    Excluir
-  </button>
-</DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <button
+                                className="flex w-full items-center gap-2 text-destructive"
+                                onClick={() => handleDelete(product.id)}
+                                disabled={loadingIds.includes(product.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Excluir
+                              </button>
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
