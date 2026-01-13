@@ -112,9 +112,9 @@ export function Header() {
   </SheetTrigger>
 
   <SheetContent
-    side="left"
-    className="fixed inset-y-0 left-0 w-3/4 max-w-sm bg-card p-4 flex flex-col gap-4 overflow-y-auto"
-  >
+  side="left"
+  className="fixed inset-y-0 left-0 z-50 w-3/4 max-w-sm bg-card p-4 flex flex-col gap-4 overflow-y-auto"
+>
     <SheetHeader>
       <SheetTitle className="text-2xl font-bold">Rionel</SheetTitle>
     </SheetHeader>
