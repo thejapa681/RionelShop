@@ -29,7 +29,11 @@ export function AdminHeader({ admin }: AdminHeaderProps) {
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-64 p-0">
+
+        <SheetContent
+          side="left"
+          className="fixed inset-y-0 left-0 w-64 bg-card p-4 flex flex-col overflow-y-auto"
+        >
           <AdminSidebar />
         </SheetContent>
       </Sheet>
