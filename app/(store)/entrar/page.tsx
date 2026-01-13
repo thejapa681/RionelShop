@@ -31,20 +31,21 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
-      const { error } = await supabase.auth.signInWithPassword({
+
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) throw error
 
+      // redireciona apenas após login concluído
+      await router.push(redirect)
+
       toast({
         title: "Login realizado com sucesso!",
         description: "Bem-vindo de volta à Rionel.",
       })
-
-      router.push(redirect)
-      router.refresh()
     } catch (error) {
       toast({
         title: "Erro ao fazer login",
