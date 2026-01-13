@@ -145,14 +145,14 @@ try {
   if (images.length > 0 && product) {
   const imageInserts = images.map((url, index) => ({
     product_id: product.id,
-    url: url || "",
+    url,
     is_primary: index === 0,
     sort_order: index,
   }))
 
-  const { error } = await supabase.from("product_images").insert(imageInserts)
-  if (error) throw error
-}
+  const { error: imageError } = await supabase
+    .from("product_images")
+    .insert(imageInserts)
 
   if (imageError) throw imageError
 }
