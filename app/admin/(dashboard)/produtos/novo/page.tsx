@@ -115,7 +115,6 @@ export default function NewProductPage() {
     try {
       const supabase = createClient()
 
-      // Create product
       const { data: product, error: productError } = await supabase
         .from("products")
         .insert({
@@ -142,7 +141,6 @@ export default function NewProductPage() {
 
       if (productError) throw productError
 
-      // Add images
       if (images.length > 0 && product) {
         const imageInserts = images.map((url, index) => ({
           product_id: product.id,
@@ -187,7 +185,6 @@ export default function NewProductPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid gap-6 lg:grid-cols-3">
-          {/* Main Info */}
           <div className="space-y-6 lg:col-span-2">
             <Card>
               <CardHeader>
@@ -197,12 +194,7 @@ export default function NewProductPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nome do Produto *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => handleNameChange(e.target.value)}
-                      required
-                    />
+                    <Input id="name" value={formData.name} onChange={(e) => handleNameChange(e.target.value)} required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="slug">Slug</Label>
@@ -238,63 +230,54 @@ export default function NewProductPage() {
 
             <Card>
               <CardHeader>
-  <CardTitle>Imagens</CardTitle>
-  <CardDescription>Adicione imagens do produto</CardDescription>
-</CardHeader>
+                <CardTitle>Imagens</CardTitle>
+                <CardDescription>Adicione imagens do produto</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
 
-<CardContent className="space-y-4">
-  <div className="flex gap-2">
-    <Input
-      type="file"
-      accept="image/*"
-      onChange={async (e) => {
-        const file = e.target.files?.[0]
-        if (!file) return
+                      const supabase = createClient()
+                      const fileExt = file.name.split(".").pop()
+                      const fileName = `${crypto.randomUUID()}.${fileExt}`
 
-        const supabase = createClient()
+                      const { error } = await supabase.storage.from("products").upload(fileName, file)
+                      if (error) return
 
-        const fileExt = file.name.split(".").pop()
-        const fileName = `${crypto.randomUUID()}.${fileExt}`
-        const filePath = fileName
+                      const { data } = supabase.storage.from("products").getPublicUrl(fileName)
+                      setImages((prev) => [...prev, data.publicUrl])
+                    }}
+                  />
+                </div>
 
-        const { error: uploadError } = await supabase.storage
-          .from("products")
-          .upload(filePath, file)
-
-        if (uploadError) return
-
-        const { data } = supabase.storage
-          .from("products")
-          .getPublicUrl(filePath)
-
-        setImages((prev) => [...prev, data.publicUrl])
-      }}
-    />
-  </div>
-
-  <div className="grid grid-cols-4 gap-4">
-    {images.map((url, index) => (
-      <div key={index} className="relative aspect-square overflow-hidden rounded-lg border">
-        <img src={url} alt="" className="h-full w-full object-cover" />
-        <Button
-          type="button"
-          variant="destructive"
-          size="icon"
-          className="absolute right-1 top-1 h-6 w-6"
-          onClick={() => setImages(images.filter((_, i) => i !== index))}
-        >
-          <X className="h-3 w-3" />
-        </Button>
-        {index === 0 && (
-          <span className="absolute bottom-1 left-1 rounded bg-primary px-2 py-0.5 text-[10px] text-primary-foreground">
-            Principal
-          </span>
-        )}
-      </div>
-    ))}
-  </div>
-</CardContent>
-</Card>
+                <div className="grid grid-cols-4 gap-4">
+                  {images.map((url, index) => (
+                    <div key={index} className="relative aspect-square overflow-hidden rounded-lg border">
+                      <img src={url} alt="" className="h-full w-full object-cover" />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute right-1 top-1 h-6 w-6"
+                        onClick={() => removeImage(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                      {index === 0 && (
+                        <span className="absolute bottom-1 left-1 rounded bg-primary px-2 py-0.5 text-[10px] text-primary-foreground">
+                          Principal
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>
@@ -314,7 +297,7 @@ export default function NewProductPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="compare_price">Preço Original (riscado)</Label>
+                    <Label htmlFor="compare_price">Preço Original</Label>
                     <Input
                       id="compare_price"
                       type="number"
@@ -336,177 +319,11 @@ export default function NewProductPage() {
                 </div>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Variações</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Cores</Label>
-                  <div className="flex gap-2">
-                    <Input placeholder="Nome da cor" value={newColor} onChange={(e) => setNewColor(e.target.value)} />
-                    <Button type="button" onClick={addColor}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {colors.map((color, index) => (
-                      <span key={index} className="flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm">
-                        {color}
-                        <button type="button" onClick={() => removeColor(index)}>
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Tamanhos</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Tamanho (P, M, G, etc.)"
-                      value={newSize}
-                      onChange={(e) => setNewSize(e.target.value)}
-                    />
-                    <Button type="button" onClick={addSize}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {sizes.map((size, index) => (
-                      <span key={index} className="flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm">
-                        {size}
-                        <button type="button" onClick={() => removeSize(index)}>
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Organização</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="category">Categoria</Label>
-                  <Select
-                    value={formData.category_id}
-                    onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="brand">Marca</Label>
-                  <Input
-                    id="brand"
-                    value={formData.brand}
-                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="sku">SKU</Label>
-                  <Input
-                    id="sku"
-                    value={formData.sku}
-                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                    placeholder="Gerado automaticamente"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Inventário</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="stock">Estoque</Label>
-                  <Input
-                    id="stock"
-                    type="number"
-                    value={formData.stock}
-                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="weight">Peso (kg)</Label>
-                  <Input
-                    id="weight"
-                    type="number"
-                    step="0.01"
-                    value={formData.weight}
-                    onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Status</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="is_active">Ativo</Label>
-                  <Switch
-                    id="is_active"
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="is_featured">Destaque</Label>
-                  <Switch
-                    id="is_featured"
-                    checked={formData.is_featured}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="is_new">Novidade</Label>
-                  <Switch
-                    id="is_new"
-                    checked={formData.is_new}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_new: checked })}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Criando...
-                </>
-              ) : (
-                "Criar Produto"
-              )}
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Produto"}
             </Button>
           </div>
         </div>
