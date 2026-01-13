@@ -104,7 +104,7 @@ export function Header() {
 
       <div className="mx-auto max-w-7xl px-4">
         <div className="flex h-16 items-center gap-4">
-          <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          <Sheet>
   <SheetTrigger asChild>
     <Button variant="ghost" size="icon" className="md:hidden">
       <Menu className="h-5 w-5" />
@@ -112,27 +112,29 @@ export function Header() {
   </SheetTrigger>
 
   <SheetContent
-  side="left"
-  className="fixed inset-y-0 left-0 z-50 w-3/4 max-w-sm bg-card p-4 flex flex-col gap-4 overflow-y-auto"
->
+    side="left"
+    className="fixed inset-y-0 left-0 z-50 w-3/4 max-w-sm bg-card p-4 flex flex-col gap-4 overflow-y-auto"
+  >
     <SheetHeader>
       <SheetTitle className="text-2xl font-bold">Rionel</SheetTitle>
     </SheetHeader>
 
-    <nav className="flex flex-col gap-2 mt-6">
+    <nav className="mt-6 flex flex-col gap-2">
       {categories.length > 0 ? (
         categories.map((category) => (
-          <Link
-            key={category.id}
-            href={`/categoria/${category.slug}`}
-            className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            {category.name}
-          </Link>
+          <SheetClose asChild key={category.id}>
+            <Link
+              href={`/categoria/${category.slug}`}
+              className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted"
+            >
+              {category.name}
+            </Link>
+          </SheetClose>
         ))
       ) : (
-        <span className="text-sm text-muted-foreground">Carregando categorias...</span>
+        <span className="text-sm text-muted-foreground">
+          Carregando categorias...
+        </span>
       )}
     </nav>
   </SheetContent>
