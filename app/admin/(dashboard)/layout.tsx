@@ -21,9 +21,9 @@ export default async function AdminDashboardLayout({
 
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
 
-  if (profile?.role !== "admin") {
-    redirect("/admin/login")
-  }
+  if (!profile?.is_admin) {
+  redirect("/admin/login")
+}
 
   return (
     <div className="flex min-h-screen bg-background">
