@@ -9,7 +9,7 @@ interface DeleteButtonProps {
   id: string
 }
 
-const DeleteButton = ({ id }: DeleteButtonProps) => {
+export default function DeleteButton({ id }: DeleteButtonProps) {
   const { toast } = useToast()
   const [isOpen, setIsOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -28,8 +28,9 @@ const DeleteButton = ({ id }: DeleteButtonProps) => {
         description: "O produto foi removido com sucesso!",
         variant: "destructive",
       })
+
       setIsOpen(false)
-      location.reload()
+      location.reload() // opcional: você pode atualizar o estado da lista ao invés de reload
     } catch (err: any) {
       toast({
         title: "Erro",
@@ -54,8 +55,9 @@ const DeleteButton = ({ id }: DeleteButtonProps) => {
       </Button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-purple-900 text-white rounded-xl shadow-lg w-96 p-6 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-opacity">
+          <div className="bg-purple-800 text-white rounded-2xl shadow-xl w-96 p-6 relative animate-fadeIn">
+            {/* Botão de fechar */}
             <button
               className="absolute top-3 right-3 text-white hover:text-gray-300"
               onClick={() => setIsOpen(false)}
@@ -63,9 +65,13 @@ const DeleteButton = ({ id }: DeleteButtonProps) => {
               <X className="h-5 w-5" />
             </button>
 
-            <h2 className="text-lg font-bold mb-4">Confirmar exclusão</h2>
-            <p className="mb-6">Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.</p>
+            {/* Conteúdo do modal */}
+            <h2 className="text-lg font-bold mb-3">Confirmar exclusão</h2>
+            <p className="mb-6 text-sm">
+              Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.
+            </p>
 
+            {/* Botões */}
             <div className="flex justify-end gap-3">
               <Button
                 variant="secondary"
@@ -75,7 +81,9 @@ const DeleteButton = ({ id }: DeleteButtonProps) => {
                 Cancelar
               </Button>
               <Button
-                variant="destructive"
+                className={`bg-purple-600 hover:bg-purple-700 text-white ${
+                  isDeleting ? "opacity-70 cursor-not-allowed" : ""
+                }`}
                 onClick={handleDelete}
                 disabled={isDeleting}
               >
@@ -88,5 +96,3 @@ const DeleteButton = ({ id }: DeleteButtonProps) => {
     </>
   )
 }
-
-export default DeleteButton
