@@ -253,41 +253,38 @@ return (
         accept="image/*"
         className="hidden"
         onChange={async (e) => {
-          const file = e.target.files?.[0]
-if (!file) return
+  const file = e.target.files?.[0]
+  if (!file) return
 
-const supabase = createClient()
+  const supabase = createClient()
 
-const ext = file.name.split(".").pop()
-const fileName = `${crypto.randomUUID()}.${ext}`
-const filePath = fileName
+  const ext = file.name.split(".").pop()
+  const fileName = `${crypto.randomUUID()}.${ext}`
 
-const { error } = await supabase.storage
-  .from("products")
-  .upload(filePath, file, {
-    contentType: file.type,
-    upsert: false,
-  })
+  const { error: uploadError } = await supabase.storage
+    .from("products")
+    .upload(fileName, file, {
+      upsert: true,
+      contentType: file.type,
+    })
 
-if (error) {
-  toast({
-    title: "Erro",
-    description: error.message,
-    variant: "destructive",
-  })
-  return
-}
+  if (uploadError) {
+    toast({
+      title: "Erro",
+      description: uploadError.message,
+      variant: "destructive",
+    })
+    return
+  }
 
-const { data } = supabase.storage
-  .from("products")
-  .getPublicUrl(filePath)
+  const { data } = supabase.storage
+    .from("products")
+    .getPublicUrl(fileName)
 
-setImages((prev) => [...prev, data.publicUrl])
-e.currentTarget.value = ""
+  setImages((prev) => [...prev, data.publicUrl])
 
-          // limpa o input para permitir enviar a mesma imagem novamente
-          e.currentTarget.value = ""
-        }}
+  e.currentTarget.value = ""
+}}
       />
     </label>
 
