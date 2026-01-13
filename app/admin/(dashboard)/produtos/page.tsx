@@ -51,23 +51,23 @@ export default async function AdminProductsPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
+            <div className="relative flex-1 max-w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Buscar produtos..." className="pl-10" />
+              <Input placeholder="Buscar produtos..." className="pl-10 w-full" />
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <Table className="w-full min-w-[600px]">
+            <Table className="w-full table-auto">
               <TableHeader>
                 <TableRow>
                   <TableHead>Produto</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Preço</TableHead>
-                  <TableHead>Estoque</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-[70px]">Ações</TableHead>
+                  <TableHead className="hidden sm:table-cell">Categoria</TableHead>
+                  <TableHead className="hidden sm:table-cell">Preço</TableHead>
+                  <TableHead className="hidden md:table-cell">Estoque</TableHead>
+                  <TableHead className="hidden md:table-cell">Status</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -100,8 +100,8 @@ export default async function AdminProductsPage() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{product.category?.name || "-"}</TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">{product.category?.name || "-"}</TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <div>
                           <p className="font-medium">{formatCurrency(product.price)}</p>
                           {product.compare_price && (
@@ -111,7 +111,7 @@ export default async function AdminProductsPage() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <Badge
                           variant={
                             product.stock > 10
@@ -124,7 +124,7 @@ export default async function AdminProductsPage() {
                           {product.stock} un.
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden md:table-cell">
                         <Badge variant={product.is_active ? "default" : "secondary"}>
                           {product.is_active ? "Ativo" : "Inativo"}
                         </Badge>
