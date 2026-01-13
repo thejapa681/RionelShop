@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -20,7 +20,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
@@ -36,11 +35,7 @@ const menuItems = [
   { icon: Settings, label: "Configurações", href: "/admin/configuracoes" },
 ]
 
-interface AdminSidebarProps {
-  isMobile?: boolean // opcional para drawer
-}
-
-export function AdminSidebar({ isMobile = false }: AdminSidebarProps) {
+export function AdminSidebar() {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -51,12 +46,7 @@ export function AdminSidebar({ isMobile = false }: AdminSidebarProps) {
   }
 
   return (
-    <aside
-      className={cn(
-        "flex flex-col border-r border-border bg-card",
-        isMobile ? "w-full h-full flex-1" : "hidden w-64 md:flex"
-      )}
-    >
+    <aside className="flex h-full w-64 flex-col border-r border-border bg-card">
       <div className="flex h-16 items-center border-b border-border px-6">
         <Link href="/admin" className="flex items-center gap-2">
           <span className="gradient-text text-xl font-bold">Rionel</span>
@@ -68,7 +58,8 @@ export function AdminSidebar({ isMobile = false }: AdminSidebarProps) {
         <nav className="space-y-1">
           {menuItems.map((item) => {
             const isActive =
-              pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href))
+              pathname === item.href ||
+              (item.href !== "/admin" && pathname.startsWith(item.href))
 
             return (
               <Link
