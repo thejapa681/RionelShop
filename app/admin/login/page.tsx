@@ -43,12 +43,13 @@ if (error) throw error
 
       if (profileError) throw profileError
 
-      if (!profile?.is_admin) { // corrigido
-        await supabase.auth.signOut()
-        throw new Error("Acesso negado. Você não tem permissões de administrador.")
-      }
+      if (!profile?.is_admin) {
+  await supabase.auth.signOut()
+  throw new Error("Acesso negado. Você não tem permissões de administrador.")
+}
 
-      await router.push("/admin") // await garante que não haja AbortError
+await supabase.auth.getSession()
+await router.push("/admin")
     } catch (err: any) {
       setError(err.message || "Erro ao fazer login")
     } finally {
