@@ -40,67 +40,74 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const discount = product.compare_price ? calculateDiscount(product.price, product.compare_price) : 0
 
   const handleAddToCart = async () => {
-    setIsLoading(true)
+  setIsLoading(true)
 
-    try {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+  try {
+    const supabase = createClient()
 
-      if (!user) {
-        toast({
-          title: "Faça login",
-          description: "Você precisa estar logado para adicionar ao carrinho",
-          variant: "destructive",
-        })
-        router.push("/entrar?redirect=" + encodeURIComponent(window.location.pathname))
-        return
-      }
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
 
-      let { data: cart } = await supabase.from("carts").select("id").eq("user_id", user.id).single()
-
-      if (!cart) {
-        const { data: newCart } = await supabase.from("carts").insert({ user_id: user.id }).select("id").single()
-        cart = newCart
-      }
-
-      if (!cart) throw new Error("Erro ao criar carrinho")
-
-      const { data: existingItem } = await supabase
-        .from("cart_items")
-        .select("id, quantity")
-        .eq("cart_id", cart.id)
-        .eq("product_id", product.id)
-        .single()
-
-      if (existingItem) {
-        await supabase
-          .from("cart_items")
-          .update({ quantity: existingItem.quantity + quantity })
-          .eq("id", existingItem.id)
-      } else {
-        await supabase.from("cart_items").insert({
-          cart_id: cart.id,
-          product_id: product.id,
-          quantity,
-        })
-      }
-
+    if (userError || !user) {
       toast({
-        title: "Adicionado ao carrinho!",
-        description: `${quantity}x ${product.name}`,
-      })
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível adicionar ao carrinho",
+        title: "Faça login",
+        description: "Você precisa estar logado para adicionar ao carrinho",
         variant: "destructive",
       })
-    } finally {
-      setIsLoading(false)
+      router.push("/entrar?redirect=" + encodeURIComponent(window.location.pathname))
+      return
     }
+
+    const { data: carts } = await supabase
+      .from("carts")
+      .select("id")
+      .eq("user_id", user.id)
+      .limit(1)
+
+    let cartId = carts?.[0]?.id
+
+    if (!cartId) {
+      const { data: newCart } = await supabase
+        .from("carts")
+        .insert({ user_id: user.id })
+        .select("id")
+        .single()
+
+      cartId = newCart.id
+    }
+
+    const { data: items } = await supabase
+      .from("cart_items")
+      .select("id, quantity")
+      .eq("cart_id", cartId)
+      .eq("product_id", product.id)
+      .limit(1)
+
+    const existingItem = items?.[0]
+
+    if (existingItem) {
+      await supabase
+        .from("cart_items")
+        .update({ quantity: existingItem.quantity + quantity })
+        .eq("id", existingItem.id)
+    } else {
+      await supabase.from("cart_items").insert({
+        cart_id: cartId,
+        product_id: product.id,
+        quantity,
+      })
+    }
+
+    toast({
+      title: "Adicionado ao carrinho!",
+      description: `${quantity}x ${product.name}`,
+    })
+  } finally {
+    setIsLoading(false)
   }
+}
 
   const handleBuyNow = async () => {
     await handleAddToCart()
