@@ -81,7 +81,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       .from("cart_items")
       .select("id, quantity")
       .eq("cart_id", cartId)
-      .eq("product_id", product.Teste)
+      .eq("product_id", product.id)
       .limit(1)
 
     const existingItem = items?.[0]
@@ -92,14 +92,11 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         .update({ quantity: existingItem.quantity + quantity })
         .eq("id", existingItem.id)
     } else {
-      await supabase
-        .from("cart_items")
-        .insert({
-          cart_id: cartId,
-          product_id: product.Teste,
-          quantity,
-        })
-        .select()
+      await supabase.from("cart_items").insert({
+        cart_id: cartId,
+        product_id: product.id,
+        quantity,
+      })
     }
 
     toast({
