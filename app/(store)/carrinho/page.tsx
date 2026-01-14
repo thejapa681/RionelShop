@@ -31,38 +31,46 @@ export default function CartPage() {
   }, [])
 
   const fetchCart = async () => {
-    setIsLoading(true)
-    const supabase = createClient()
+  setIsLoading(true)
+  const supabase = createClient()
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-    if (!user) {
-      setIsLoading(false)
-      return
-    }
-
-    const { data: cart } = await supabase.from("carts").select("id").eq("user_id", user.id).single()
-
-    if (cart) {
-      const { data: items } = await supabase
-        .from("cart_items")
-        .select(
-          `
-          *,
-          product:products(*, images:product_images(*))
-        `,
-        )
-        .eq("cart_id", cart.id)
-
-      if (items) {
-        setCartItems(items as CartItemWithProduct[])
-      }
-    }
-
+  if (!user) {
     setIsLoading(false)
+    return
   }
+
+  const { data: carts } = await supabase
+    .from("carts")
+    .select("id")
+    .eq("user_id", user.id)
+    .limit(1)
+
+  const cartId = carts?.[0]?.id
+
+  if (!cartId) {
+    setCartItems([])
+    setIsLoading(false)
+    return
+  }
+
+  const { data: items } = await supabase
+    .from("cart_items")
+    .select(
+      `
+      id,
+      quantity,
+      product:products(*, images:product_images(*))
+    `,
+    )
+    .eq("cart_id", cartId)
+
+  setCartItems((items as CartItemWithProduct[]) || [])
+  setIsLoading(false)
+}
 
   const updateQuantity = async (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return
