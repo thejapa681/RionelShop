@@ -58,15 +58,16 @@ export default function CartPage() {
   }
 
   const { data: items } = await supabase
-    .from("cart_items")
-    .select(
-      `
-      id,
-      quantity,
-      product:products(*, images:product_images(*))
-    `,
+  .from("cart_items")
+  .select(`
+    id,
+    quantity,
+    product:products!cart_items_product_ref_fkey(
+      *,
+      images:product_images(*)
     )
-    .eq("cart_id", cartId)
+  `)
+  .eq("cart_id", cartId)
 
   setCartItems((items as CartItemWithProduct[]) || [])
   setIsLoading(false)
