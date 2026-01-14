@@ -49,15 +49,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       data: { user },
     } = await supabase.auth.getUser()
 
-    if (!user) {
-      toast({
-        title: "Faça login",
-        description: "Você precisa estar logado para adicionar ao carrinho",
-        variant: "destructive",
-      })
-      router.push("/entrar?redirect=" + encodeURIComponent(window.location.pathname))
-      return
-    }
+    if (!user) return
 
     const { data: carts } = await supabase
       .from("carts")
@@ -98,11 +90,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         quantity,
       })
     }
-
-    toast({
-      title: "Adicionado ao carrinho!",
-      description: `${quantity}x ${product.name}`,
-    })
   } finally {
     setIsLoading(false)
   }
