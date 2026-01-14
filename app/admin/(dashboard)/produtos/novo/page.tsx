@@ -154,23 +154,27 @@ const handleSubmit = async (e: React.FormEvent) => {
       .select("Teste")
       .single()
 
-    if (productError || !product?.uuid)
+    if (productError || !product?.Teste)
       throw productError || new Error("Erro ao criar produto")
 
     if (images.length > 0) {
-      const imageInserts = images.map((url, index) => ({
-        product_id: product.Teste,
-        url,
-        is_primary: index === 0,
-        sort_order: index,
-      }))
+  try {
+    const imageInserts = images.map((url, index) => ({
+      product_id: product.Teste,
+      url,
+      is_primary: index === 0,
+      sort_order: index,
+    }))
 
-      const { error: imageError } = await supabase
-        .from("product_images")
-        .insert(imageInserts)
+    const { error: imageError } = await supabase
+      .from("product_images")
+      .insert(imageInserts)
 
-      if (imageError) throw imageError
-    }
+    if (imageError) console.warn("Erro ao inserir imagens:", imageError.message)
+  } catch (err) {
+    console.warn("Erro ao inserir imagens:", err)
+  }
+}
 
     toast({
       title: "Produto criado",
