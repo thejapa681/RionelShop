@@ -44,9 +44,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
   try {
     const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
       toast({
@@ -55,57 +53,74 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         variant: "destructive",
       })
       router.push("/entrar?redirect=" + encodeURIComponent(window.location.pathname))
-      return
+      return false
     }
 
-    let { data: cart } = await supabase
+    // 1️⃣ Buscar ou criar carrinho
+    let { data: cart, error: cartError } = await supabase
       .from("carts")
       .select("id")
       .eq("user_id", user.id)
-      .maybeSingle()
+      .single()
+
+    if (cartError && cartError.code !== "PGRST116") {
+      throw cartError
+    }
 
     if (!cart) {
-      const { data: newCart } = await supabase
+      const { data: newCart, error: createError } = await supabase
         .from("carts")
         .insert({ user_id: user.id })
         .select("id")
         .single()
 
+      if (createError) throw createError
       cart = newCart
     }
 
-    if (!cart) throw new Error("Erro ao criar carrinho")
-
-    const { data: existingItem } = await supabase
+    // 2️⃣ Verificar item existente
+    const { data: existingItem, error: itemError } = await supabase
       .from("cart_items")
       .select("id, quantity")
       .eq("cart_id", cart.id)
       .eq("product_id", product.id)
-      .maybeSingle()
+      .single()
+
+    if (itemError && itemError.code !== "PGRST116") {
+      throw itemError
+    }
 
     if (existingItem) {
-      await supabase
+      const { error: updateError } = await supabase
         .from("cart_items")
         .update({ quantity: existingItem.quantity + quantity })
         .eq("id", existingItem.id)
+
+      if (updateError) throw updateError
     } else {
-      await supabase.from("cart_items").insert({
+      const { error: insertError } = await supabase.from("cart_items").insert({
         cart_id: cart.id,
         product_id: product.id,
         quantity,
       })
+
+      if (insertError) throw insertError
     }
 
     toast({
       title: "Adicionado ao carrinho!",
       description: `${quantity}x ${product.name}`,
     })
-  } catch {
+
+    return true
+  } catch (error) {
+    console.error(error)
     toast({
       title: "Erro",
       description: "Não foi possível adicionar ao carrinho",
       variant: "destructive",
     })
+    return false
   } finally {
     setIsLoading(false)
   }
