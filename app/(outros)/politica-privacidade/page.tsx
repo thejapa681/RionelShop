@@ -129,7 +129,7 @@ export default function PrivacyPolicyPage() {
           <CardTitle>9. Contato</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <p>Em caso de dúvidas sobre a política de privacidade, entre em contato pelo e-mail: <strong>suporte@rionelshop.com</strong>.</p>
+          <p>Em caso de dúvidas sobre a política de privacidade, entre em contato pelo e-mail: <strong>rionelshopsuporte@gmail.com</strong>.</p>
         </CardContent>
       </Card>
     </div>
