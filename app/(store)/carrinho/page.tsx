@@ -8,7 +8,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { ShoppingCart, Trash2, Minus, Plus, Tag, ArrowRight, Loader2, ShoppingBag } from "lucide-react"
+import {
+  ShoppingCart,
+  Trash2,
+  Minus,
+  Plus,
+  Tag,
+  ArrowRight,
+  Loader2,
+  ShoppingBag,
+} from "lucide-react"
 import { formatCurrency } from "@/lib/utils/format"
 import { useToast } from "@/hooks/use-toast"
 import type { CartItem, Product, Coupon } from "@/lib/types"
@@ -31,55 +40,63 @@ export default function CartPage() {
   }, [])
 
   const fetchCart = async () => {
-  setIsLoading(true)
-  const supabase = createClient()
+    setIsLoading(true)
+    const supabase = createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-  if (!user) {
+    if (!user) {
+      setCartItems([])
+      setIsLoading(false)
+      return
+    }
+
+    const { data: cart } = await supabase
+      .from("carts")
+      .select("id")
+      .eq("user_id", user.id)
+      .single()
+
+    if (!cart) {
+      setCartItems([])
+      setIsLoading(false)
+      return
+    }
+
+    const { data: items, error } = await supabase
+      .from("cart_items")
+      .select(`
+        id,
+        quantity,
+        product:products(
+          *,
+          images:product_images(*)
+        )
+      `)
+      .eq("cart_id", cart.id)
+
+    if (error) {
+      toast({
+        title: "Erro ao carregar carrinho",
+        variant: "destructive",
+      })
+      setCartItems([])
+    } else {
+      setCartItems((items as CartItemWithProduct[]) || [])
+    }
+
     setIsLoading(false)
-    return
   }
-
-  const { data: carts } = await supabase
-    .from("carts")
-    .select("id")
-    .eq("user_id", user.id)
-    .limit(1)
-
-  const cartId = carts?.[0]?.id
-
-  if (!cartId) {
-    setCartItems([])
-    setIsLoading(false)
-    return
-  }
-
-  const { data: items } = await supabase
-  .from("cart_items")
-  .select(`
-    id,
-    quantity,
-    product:products!cart_items_product_ref_fkey(
-      *,
-      images:product_images(*)
-    )
-  `)
-  .eq("cart_id", cartId)
-
-  setCartItems((items as CartItemWithProduct[]) || [])
-  setIsLoading(false)
-}
 
   const updateQuantity = async (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return
 
-    const supabase = createClient()
-
     const item = cartItems.find((i) => i.id === itemId)
-    if (item && newQuantity > item.product.stock) {
+    if (!item) return
+
+    if (newQuantity > item.product.stock) {
       toast({
         title: "Quantidade indisponível",
         description: `Máximo disponível: ${item.product.stock}`,
@@ -88,14 +105,42 @@ export default function CartPage() {
       return
     }
 
-    await supabase.from("cart_items").update({ quantity: newQuantity }).eq("id", itemId)
+    const supabase = createClient()
+    const { error } = await supabase
+      .from("cart_items")
+      .update({ quantity: newQuantity })
+      .eq("id", itemId)
 
-    setCartItems((prev) => prev.map((item) => (item.id === itemId ? { ...item, quantity: newQuantity } : item)))
+    if (error) {
+      toast({
+        title: "Erro ao atualizar quantidade",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.id === itemId ? { ...item, quantity: newQuantity } : item,
+      ),
+    )
   }
 
   const removeItem = async (itemId: string) => {
     const supabase = createClient()
-    await supabase.from("cart_items").delete().eq("id", itemId)
+    const { error } = await supabase
+      .from("cart_items")
+      .delete()
+      .eq("id", itemId)
+
+    if (error) {
+      toast({
+        title: "Erro ao remover item",
+        variant: "destructive",
+      })
+      return
+    }
+
     setCartItems((prev) => prev.filter((item) => item.id !== itemId))
     toast({ title: "Item removido do carrinho" })
   }
@@ -151,7 +196,10 @@ export default function CartPage() {
     setIsApplyingCoupon(false)
   }
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0,
+  )
 
   const discountAmount = appliedCoupon
     ? appliedCoupon.discount_type === "percentage"
@@ -180,7 +228,9 @@ export default function CartPage() {
           <ShoppingBag className="h-12 w-12 text-muted-foreground" />
         </div>
         <h1 className="mb-2 text-2xl font-bold">Seu carrinho está vazio</h1>
-        <p className="mb-6 text-center text-muted-foreground">Explore nossa loja e encontre produtos incríveis!</p>
+        <p className="mb-6 text-center text-muted-foreground">
+          Explore nossa loja e encontre produtos incríveis!
+        </p>
         <Button asChild size="lg">
           <Link href="/">Explorar Produtos</Link>
         </Button>
@@ -193,11 +243,12 @@ export default function CartPage() {
       <h1 className="mb-8 flex items-center gap-3 text-2xl font-bold md:text-3xl">
         <ShoppingCart className="h-7 w-7 text-primary" />
         Meu Carrinho
-        <span className="text-lg font-normal text-muted-foreground">({cartItems.length} itens)</span>
+        <span className="text-lg font-normal text-muted-foreground">
+          ({cartItems.length} itens)
+        </span>
       </h1>
 
       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Cart Items */}
         <div className="space-y-4 lg:col-span-2">
           {cartItems.map((item) => {
             const image =
@@ -209,9 +260,12 @@ export default function CartPage() {
               <Card key={item.id} className="border-border bg-card">
                 <CardContent className="p-4">
                   <div className="flex gap-4">
-                    <Link href={`/produto/${item.product.slug}`} className="flex-shrink-0">
+                    <Link
+                      href={`/produto/${item.product.slug}`}
+                      className="flex-shrink-0"
+                    >
                       <img
-                        src={image || "/placeholder.svg"}
+                        src={image}
                         alt={item.product.name}
                         className="h-24 w-24 rounded-lg object-cover md:h-32 md:w-32"
                       />
@@ -219,7 +273,10 @@ export default function CartPage() {
 
                     <div className="flex flex-1 flex-col justify-between">
                       <div>
-                        <Link href={`/produto/${item.product.slug}`} className="font-medium hover:text-primary">
+                        <Link
+                          href={`/produto/${item.product.slug}`}
+                          className="font-medium hover:text-primary"
+                        >
                           {item.product.name}
                         </Link>
                         {item.product.compare_price && (
@@ -227,7 +284,9 @@ export default function CartPage() {
                             {formatCurrency(item.product.compare_price)}
                           </p>
                         )}
-                        <p className="text-lg font-bold text-primary">{formatCurrency(item.product.price)}</p>
+                        <p className="text-lg font-bold text-primary">
+                          {formatCurrency(item.product.price)}
+                        </p>
                       </div>
 
                       <div className="flex items-center justify-between">
@@ -236,18 +295,26 @@ export default function CartPage() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 rounded-r-none"
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity - 1)
+                            }
                             disabled={item.quantity <= 1}
                           >
                             <Minus className="h-3 w-3" />
                           </Button>
-                          <span className="w-10 text-center text-sm">{item.quantity}</span>
+                          <span className="w-10 text-center text-sm">
+                            {item.quantity}
+                          </span>
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 rounded-l-none"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            disabled={item.quantity >= item.product.stock}
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity + 1)
+                            }
+                            disabled={
+                              item.quantity >= item.product.stock
+                            }
                           >
                             <Plus className="h-3 w-3" />
                           </Button>
@@ -265,7 +332,11 @@ export default function CartPage() {
                     </div>
 
                     <div className="hidden text-right md:block">
-                      <p className="font-bold">{formatCurrency(item.product.price * item.quantity)}</p>
+                      <p className="font-bold">
+                        {formatCurrency(
+                          item.product.price * item.quantity,
+                        )}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -274,31 +345,38 @@ export default function CartPage() {
           })}
         </div>
 
-        {/* Summary */}
         <div className="lg:sticky lg:top-24 lg:self-start">
           <Card className="border-border bg-card">
             <CardHeader>
               <CardTitle>Resumo do Pedido</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Coupon */}
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Tag className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     placeholder="Cupom de desconto"
                     value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    onChange={(e) =>
+                      setCouponCode(e.target.value.toUpperCase())
+                    }
                     className="bg-secondary pl-10 uppercase"
                     disabled={!!appliedCoupon}
                   />
                 </div>
                 {appliedCoupon ? (
-                  <Button variant="outline" onClick={() => setAppliedCoupon(null)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setAppliedCoupon(null)}
+                  >
                     Remover
                   </Button>
                 ) : (
-                  <Button variant="outline" onClick={applyCoupon} disabled={isApplyingCoupon}>
+                  <Button
+                    variant="outline"
+                    onClick={applyCoupon}
+                    disabled={isApplyingCoupon}
+                  >
                     Aplicar
                   </Button>
                 )}
@@ -306,8 +384,12 @@ export default function CartPage() {
 
               {appliedCoupon && (
                 <div className="rounded-lg bg-primary/10 p-3 text-sm">
-                  <p className="font-medium text-primary">Cupom {appliedCoupon.code} aplicado!</p>
-                  <p className="text-muted-foreground">{appliedCoupon.description}</p>
+                  <p className="font-medium text-primary">
+                    Cupom {appliedCoupon.code} aplicado!
+                  </p>
+                  <p className="text-muted-foreground">
+                    {appliedCoupon.description}
+                  </p>
                 </div>
               )}
 
@@ -326,8 +408,12 @@ export default function CartPage() {
                 )}
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Frete</span>
-                  <span className={shippingCost === 0 ? "text-primary" : ""}>
-                    {shippingCost === 0 ? "Grátis" : formatCurrency(shippingCost)}
+                  <span
+                    className={shippingCost === 0 ? "text-primary" : ""}
+                  >
+                    {shippingCost === 0
+                      ? "Grátis"
+                      : formatCurrency(shippingCost)}
                   </span>
                 </div>
               </div>
@@ -336,17 +422,29 @@ export default function CartPage() {
 
               <div className="flex justify-between text-lg font-bold">
                 <span>Total</span>
-                <span className="text-primary">{formatCurrency(total)}</span>
+                <span className="text-primary">
+                  {formatCurrency(total)}
+                </span>
               </div>
 
-              <p className="text-xs text-muted-foreground">em até 12x de {formatCurrency(total / 12)} sem juros</p>
+              <p className="text-xs text-muted-foreground">
+                em até 12x de {formatCurrency(total / 12)} sem juros
+              </p>
 
-              <Button className="w-full gap-2" size="lg" onClick={() => router.push("/checkout")}>
+              <Button
+                className="w-full gap-2"
+                size="lg"
+                onClick={() => router.push("/checkout")}
+              >
                 Finalizar Compra
                 <ArrowRight className="h-4 w-4" />
               </Button>
 
-              <Button variant="outline" className="w-full bg-transparent" asChild>
+              <Button
+                variant="outline"
+                className="w-full bg-transparent"
+                asChild
+              >
                 <Link href="/">Continuar Comprando</Link>
               </Button>
             </CardContent>
