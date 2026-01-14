@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -23,10 +23,9 @@ import { Plus, Search, MoreHorizontal, Pencil, Eye, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/utils/format"
 import { useToast } from "@/hooks/use-toast"
-import { createClient } from "@/lib/supabase/client"
 
 interface Product {
-  id: string | number
+  Teste: string
   name?: string
   slug?: string
   sku?: string
@@ -44,44 +43,13 @@ interface ProductsTableProps {
 
 export default function ProductsTable({ products }: ProductsTableProps) {
   const { toast } = useToast()
-  const [items, setItems] = useState<Product[]>(Array.isArray(products) ? products : [])
   const [loadingIds, setLoadingIds] = useState<string[]>([])
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from("products")
-        .select(`
-          id,
-          name,
-          slug,
-          sku,
-          price,
-          compare_price,
-          stock,
-          is_active,
-          category(name),
-          product_images(url, is_primary)
-        `)
-        .order("name")
-
-      if (error) {
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar os produtos",
-          variant: "destructive",
-        })
-        return
-      }
-
-      setItems(data ?? [])
-    }
-
-    if (!products || products.length === 0) {
-      fetchProducts()
-    }
-  }, [products, toast])
+  const items =
+    products?.map((p) => ({
+      ...p,
+      id: p.Teste,
+    })) || []
 
   const safeCurrency = (value?: number) => {
     if (typeof value !== "number" || isNaN(value)) return "-"
@@ -90,22 +58,18 @@ export default function ProductsTable({ products }: ProductsTableProps) {
 
   const handleDelete = async (id: string | number) => {
     if (!window.confirm("Tem certeza que deseja excluir este produto?")) return
-
     const idStr = String(id)
     setLoadingIds((prev) => [...prev, idStr])
-
     try {
       const res = await fetch(`/api/products/${id}`, { method: "DELETE" })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.error || "Erro ao excluir")
-
       toast({
         title: "Produto excluído",
         description: "O produto foi removido com sucesso",
         variant: "destructive",
       })
-
-      setItems((prev) => prev.filter((p) => String(p.id) !== idStr))
+      setLoadingIds((prev) => prev.filter((i) => i !== idStr))
     } catch (err: any) {
       toast({
         title: "Erro",
@@ -115,10 +79,6 @@ export default function ProductsTable({ products }: ProductsTableProps) {
     } finally {
       setLoadingIds((prev) => prev.filter((i) => i !== idStr))
     }
-  }
-
-  if (!Array.isArray(items)) {
-    return <p>Erro ao carregar produtos</p>
   }
 
   return (
@@ -162,7 +122,6 @@ export default function ProductsTable({ products }: ProductsTableProps) {
                   const primaryImage =
                     product.product_images?.find((img) => img.is_primary)?.url ||
                     product.product_images?.[0]?.url
-
                   return (
                     <TableRow key={String(product.id)}>
                       <TableCell>
@@ -189,9 +148,7 @@ export default function ProductsTable({ products }: ProductsTableProps) {
                         </div>
                       </TableCell>
 
-                      <TableCell className="hidden sm:table-cell">
-                        {product.category?.name || "-"}
-                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">{product.category?.name || "-"}</TableCell>
 
                       <TableCell className="hidden sm:table-cell">
                         <p className="font-medium">{safeCurrency(product.price)}</p>
