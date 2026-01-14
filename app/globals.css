@@ -141,3 +141,15 @@
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+img[style*="position: absolute"] {
+  height: 100% !important;
+  width: 100% !important;
+}
