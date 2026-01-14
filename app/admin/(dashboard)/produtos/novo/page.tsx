@@ -151,7 +151,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         colors: colors.length > 0 ? colors : null,
         sizes: sizes.length > 0 ? sizes : null,
       })
-      .select("id") // pegar somente o id necessário
+      .select("uuid")
       .single()
 
     if (productError || !product?.id)
