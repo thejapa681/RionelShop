@@ -57,7 +57,7 @@ export default function CartPage() {
       .from("carts")
       .select("id")
       .eq("user_id", user.id)
-      .single()
+      .maybeSingle()
 
     if (!cart) {
       setCartItems([])
@@ -70,7 +70,7 @@ export default function CartPage() {
       .select(`
         id,
         quantity,
-        product:products(
+        product:product_id(
           *,
           images:product_images(*)
         )
@@ -156,7 +156,7 @@ export default function CartPage() {
       .select("*")
       .eq("code", couponCode.toUpperCase())
       .eq("is_active", true)
-      .single()
+      .maybeSingle()
 
     if (error || !coupon) {
       toast({
@@ -351,86 +351,6 @@ export default function CartPage() {
               <CardTitle>Resumo do Pedido</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Tag className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Cupom de desconto"
-                    value={couponCode}
-                    onChange={(e) =>
-                      setCouponCode(e.target.value.toUpperCase())
-                    }
-                    className="bg-secondary pl-10 uppercase"
-                    disabled={!!appliedCoupon}
-                  />
-                </div>
-                {appliedCoupon ? (
-                  <Button
-                    variant="outline"
-                    onClick={() => setAppliedCoupon(null)}
-                  >
-                    Remover
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    onClick={applyCoupon}
-                    disabled={isApplyingCoupon}
-                  >
-                    Aplicar
-                  </Button>
-                )}
-              </div>
-
-              {appliedCoupon && (
-                <div className="rounded-lg bg-primary/10 p-3 text-sm">
-                  <p className="font-medium text-primary">
-                    Cupom {appliedCoupon.code} aplicado!
-                  </p>
-                  <p className="text-muted-foreground">
-                    {appliedCoupon.description}
-                  </p>
-                </div>
-              )}
-
-              <Separator />
-
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>{formatCurrency(subtotal)}</span>
-                </div>
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-primary">
-                    <span>Desconto</span>
-                    <span>-{formatCurrency(discountAmount)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Frete</span>
-                  <span
-                    className={shippingCost === 0 ? "text-primary" : ""}
-                  >
-                    {shippingCost === 0
-                      ? "Grátis"
-                      : formatCurrency(shippingCost)}
-                  </span>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="flex justify-between text-lg font-bold">
-                <span>Total</span>
-                <span className="text-primary">
-                  {formatCurrency(total)}
-                </span>
-              </div>
-
-              <p className="text-xs text-muted-foreground">
-                em até 12x de {formatCurrency(total / 12)} sem juros
-              </p>
-
               <Button
                 className="w-full gap-2"
                 size="lg"
