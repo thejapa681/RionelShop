@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -23,9 +23,10 @@ import { Plus, Search, MoreHorizontal, Pencil, Eye, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { formatCurrency } from "@/lib/utils/format"
 import { useToast } from "@/hooks/use-toast"
+import { createClient } from "@/lib/supabase/client"
 
 interface Product {
-  Teste: string | number
+  id: string | number
   name?: string
   slug?: string
   sku?: string
@@ -45,6 +46,42 @@ export default function ProductsTable({ products }: ProductsTableProps) {
   const { toast } = useToast()
   const [items, setItems] = useState<Product[]>(Array.isArray(products) ? products : [])
   const [loadingIds, setLoadingIds] = useState<string[]>([])
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from("products")
+        .select(`
+          id,
+          name,
+          slug,
+          sku,
+          price,
+          compare_price,
+          stock,
+          is_active,
+          category(name),
+          product_images(url, is_primary)
+        `)
+        .order("name")
+
+      if (error) {
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os produtos",
+          variant: "destructive",
+        })
+        return
+      }
+
+      setItems(data ?? [])
+    }
+
+    if (!products || products.length === 0) {
+      fetchProducts()
+    }
+  }, [products, toast])
 
   const safeCurrency = (value?: number) => {
     if (typeof value !== "number" || isNaN(value)) return "-"
