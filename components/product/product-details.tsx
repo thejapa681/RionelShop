@@ -47,10 +47,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
     const {
       data: { user },
-      error: userError,
     } = await supabase.auth.getUser()
 
-    if (userError || !user) {
+    if (!user) {
       toast({
         title: "Faça login",
         description: "Você precisa estar logado para adicionar ao carrinho",
@@ -60,6 +59,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       return
     }
 
+    // 1️⃣ Buscar ou criar carrinho
     const { data: carts } = await supabase
       .from("carts")
       .select("id")
@@ -78,15 +78,17 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       cartId = newCart.id
     }
 
+    // 2️⃣ Verificar se o produto já existe no carrinho
     const { data: items } = await supabase
       .from("cart_items")
       .select("id, quantity")
       .eq("cart_id", cartId)
-      .eq("product_id", product.id)
+      .eq("product_ref", product.Teste)
       .limit(1)
 
     const existingItem = items?.[0]
 
+    // 3️⃣ Atualizar ou inserir
     if (existingItem) {
       await supabase
         .from("cart_items")
@@ -95,7 +97,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
     } else {
       await supabase.from("cart_items").insert({
         cart_id: cartId,
-        product_id: product.id,
+        product_ref: product.Teste,
         quantity,
       })
     }
