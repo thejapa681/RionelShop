@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -16,7 +16,7 @@ import Link from "next/link"
 import type { Category } from "@/lib/types"
 
 interface EditProductProps {
-  params: { id: string } // UUID do produto
+  params: { id: string }
 }
 
 export default function EditProductPage({ params }: EditProductProps) {
@@ -31,7 +31,6 @@ export default function EditProductPage({ params }: EditProductProps) {
   const [newImageUrl, setNewImageUrl] = useState("")
   const [newColor, setNewColor] = useState("")
   const [newSize, setNewSize] = useState("")
-
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -61,17 +60,11 @@ export default function EditProductPage({ params }: EditProductProps) {
   }
 
   const fetchProduct = async () => {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("Teste", params.id)
-      .single()
-
+    const { data, error } = await supabase.from("products").select("*").eq("Teste", params.id).single()
     if (error || !data) {
       toast({ title: "Erro", description: "Produto não encontrado", variant: "destructive" })
       return
     }
-
     setFormData({
       name: data.name,
       slug: data.slug,
@@ -89,16 +82,9 @@ export default function EditProductPage({ params }: EditProductProps) {
       is_featured: data.is_featured,
       is_new: data.is_new,
     })
-
     if (data.colors) setColors(data.colors)
     if (data.sizes) setSizes(data.sizes)
-
-    const { data: imgs } = await supabase
-      .from("product_images")
-      .select("url")
-      .eq("product_id", data.Teste)
-      .order("sort_order")
-
+    const { data: imgs } = await supabase.from("product_images").select("url").eq("product_id", data.Teste).order("sort_order")
     if (imgs) setImages(imgs.map((i: any) => i.url))
   }
 
@@ -120,22 +106,18 @@ export default function EditProductPage({ params }: EditProductProps) {
     e.preventDefault()
     setIsLoading(true)
     try {
-      await supabase
-        .from("products")
-        .update({
-          ...formData,
-          price: Number.parseFloat(formData.price) || 0,
-          compare_price: formData.compare_price ? Number.parseFloat(formData.compare_price) : null,
-          cost_price: formData.cost_price ? Number.parseFloat(formData.cost_price) : null,
-          stock: Number.parseInt(formData.stock) || 0,
-          weight: formData.weight ? Number.parseFloat(formData.weight) : null,
-          colors: colors.length > 0 ? colors : null,
-          sizes: sizes.length > 0 ? sizes : null,
-        })
-        .eq("Teste", params.id)
+      await supabase.from("products").update({
+        ...formData,
+        price: Number.parseFloat(formData.price) || 0,
+        compare_price: formData.compare_price ? Number.parseFloat(formData.compare_price) : null,
+        cost_price: formData.cost_price ? Number.parseFloat(formData.cost_price) : null,
+        stock: Number.parseInt(formData.stock) || 0,
+        weight: formData.weight ? Number.parseFloat(formData.weight) : null,
+        colors: colors.length > 0 ? colors : null,
+        sizes: sizes.length > 0 ? sizes : null,
+      }).eq("Teste", params.id)
 
       if (images.length > 0) {
-        // opcional: atualizar imagens (pode deletar e recriar todas)
         await supabase.from("product_images").delete().eq("product_id", params.id)
         const inserts = images.map((url, i) => ({ product_id: params.id, url, is_primary: i === 0, sort_order: i }))
         await supabase.from("product_images").insert(inserts)
@@ -161,33 +143,129 @@ export default function EditProductPage({ params }: EditProductProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Reaproveite todo o layout de criação, apenas substituindo valores por formData */}
-        {/* Informações, imagens, preços, variações, inventário, status */}
-        {/* ...Aqui você copia tudo do form de criação, só que usando os estados carregados */}
-        {/* Exemplo: */}
-        <Card>
-          <CardHeader><CardTitle>Informações Básicas</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome do Produto *</Label>
-                <Input id="name" value={formData.name} onChange={(e) => handleNameChange(e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="slug">Slug</Label>
-                <Input id="slug" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="short_description">Descrição Curta</Label>
-              <Textarea id="short_description" value={formData.short_description} onChange={(e) => setFormData({ ...formData, short_description: e.target.value })} rows={2} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição Completa</Label>
-              <Textarea id="description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={5} />
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-2">
+            <Card>
+              <CardHeader><CardTitle>Informações Básicas</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nome do Produto *</Label>
+                    <Input id="name" value={formData.name} onChange={(e) => handleNameChange(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="slug">Slug</Label>
+                    <Input id="slug" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="short_description">Descrição Curta</Label>
+                  <Textarea id="short_description" value={formData.short_description} onChange={(e) => setFormData({ ...formData, short_description: e.target.value })} rows={2} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Descrição Completa</Label>
+                  <Textarea id="description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={5} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Imagens</CardTitle>
+                <CardDescription>Adicione imagens do produto</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <label className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-purple-500 bg-purple-50 px-4 py-6 text-purple-700 transition hover:bg-purple-100">
+                  <Plus className="mr-2 h-5 w-5" />
+                  <span className="font-medium">Adicionar imagem</span>
+                  <input type="file" accept="image/*" className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]; if (!file) return
+                      const ext = file.name.split(".").pop()
+                      const fileName = `${crypto.randomUUID()}.${ext}`
+                      const { error: uploadError } = await supabase.storage.from("products").upload(fileName, file, { upsert: true, contentType: file.type })
+                      if (uploadError) return toast({ title: "Erro", description: uploadError.message, variant: "destructive" })
+                      const { data } = supabase.storage.from("products").getPublicUrl(fileName)
+                      if (!data?.publicUrl) return toast({ title: "Erro", description: "Erro ao gerar URL da imagem", variant: "destructive" })
+                      setImages((prev) => [...prev, data.publicUrl])
+                      e.currentTarget.value = ""
+                    }}
+                  />
+                </label>
+                <div className="grid grid-cols-4 gap-4">
+                  {images.map((url, index) => (
+                    <div key={index} className="relative aspect-square overflow-hidden rounded-lg border">
+                      <img src={url} alt="" className="h-full w-full object-cover" />
+                      <Button type="button" variant="destructive" size="icon" className="absolute right-1 top-1 h-6 w-6" onClick={() => removeImage(index)}><X className="h-3 w-3" /></Button>
+                      {index === 0 && <span className="absolute bottom-1 left-1 rounded bg-purple-600 px-2 py-0.5 text-[10px] text-white">Principal</span>}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card>
+              <CardHeader><CardTitle>Organização</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category">Categoria</Label>
+                  <Select value={formData.category_id} onValueChange={(value) => setFormData({ ...formData, category_id: value })}>
+                    <SelectTrigger><SelectValue placeholder="Selecione uma categoria" /></SelectTrigger>
+                    <SelectContent>
+                      {categories.map((category) => <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2"><Label htmlFor="brand">Marca</Label><Input id="brand" value={formData.brand} onChange={(e) => setFormData({ ...formData, brand: e.target.value })} /></div>
+                <div className="space-y-2"><Label htmlFor="sku">SKU</Label><Input id="sku" value={formData.sku} onChange={(e) => setFormData({ ...formData, sku: e.target.value })} /></div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Preços</CardTitle></CardHeader>
+              <CardContent className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2"><Label htmlFor="price">Preço de Venda *</Label><Input id="price" type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} required /></div>
+                <div className="space-y-2"><Label htmlFor="compare_price">Preço Original (riscado)</Label><Input id="compare_price" type="number" step="0.01" value={formData.compare_price} onChange={(e) => setFormData({ ...formData, compare_price: e.target.value })} /></div>
+                <div className="space-y-2"><Label htmlFor="cost_price">Preço de Custo</Label><Input id="cost_price" type="number" step="0.01" value={formData.cost_price} onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })} /></div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Variações</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Cores</Label>
+                  <div className="flex gap-2"><Input placeholder="Nome da cor" value={newColor} onChange={(e) => setNewColor(e.target.value)} /><Button type="button" onClick={addColor}><Plus className="h-4 w-4" /></Button></div>
+                  <div className="flex flex-wrap gap-2">{colors.map((color, i) => <span key={i} className="flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm">{color}<button type="button" onClick={() => removeColor(i)}><X className="h-3 w-3" /></button></span>)}</div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Tamanhos</Label>
+                  <div className="flex gap-2"><Input placeholder="Tamanho (P, M, G, etc.)" value={newSize} onChange={(e) => setNewSize(e.target.value)} /><Button type="button" onClick={addSize}><Plus className="h-4 w-4" /></Button></div>
+                  <div className="flex flex-wrap gap-2">{sizes.map((size, i) => <span key={i} className="flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-sm">{size}<button type="button" onClick={() => removeSize(i)}><X className="h-3 w-3" /></button></span>)}</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Inventário</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2"><Label htmlFor="stock">Estoque</Label><Input id="stock" type="number" value={formData.stock} onChange={(e) => setFormData({ ...formData, stock: e.target.value })} /></div>
+                <div className="space-y-2"><Label htmlFor="weight">Peso (kg)</Label><Input id="weight" type="number" step="0.01" value={formData.weight} onChange={(e) => setFormData({ ...formData, weight: e.target.value })} /></div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Status</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between"><Label htmlFor="is_active">Ativo</Label><Switch id="is_active" checked={formData.is_active} onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })} /></div>
+                <div className="flex items-center justify-between"><Label htmlFor="is_featured">Destaque</Label><Switch id="is_featured" checked={formData.is_featured} onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })} /></div>
+                <div className="flex items-center justify-between"><Label htmlFor="is_new">Novidade</Label><Switch id="is_new" checked={formData.is_new} onCheckedChange={(checked) => setFormData({ ...formData, is_new: checked })} /></div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvando...</> : "Salvar Alterações"}
