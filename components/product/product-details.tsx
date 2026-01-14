@@ -44,39 +44,44 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
   try {
     const supabase = createClient()
-
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
-    if (!user) return
+    if (!user) {
+      toast({
+        title: "Faça login",
+        description: "Você precisa estar logado para adicionar ao carrinho",
+        variant: "destructive",
+      })
+      router.push("/entrar?redirect=" + encodeURIComponent(window.location.pathname))
+      return
+    }
 
-    const { data: carts } = await supabase
+    let { data: cart } = await supabase
       .from("carts")
       .select("id")
       .eq("user_id", user.id)
-      .limit(1)
+      .maybeSingle()
 
-    let cartId = carts?.[0]?.id
-
-    if (!cartId) {
+    if (!cart) {
       const { data: newCart } = await supabase
         .from("carts")
         .insert({ user_id: user.id })
         .select("id")
         .single()
 
-      cartId = newCart.id
+      cart = newCart
     }
 
-    const { data: items } = await supabase
+    if (!cart) throw new Error("Erro ao criar carrinho")
+
+    const { data: existingItem } = await supabase
       .from("cart_items")
       .select("id, quantity")
-      .eq("cart_id", cartId)
+      .eq("cart_id", cart.id)
       .eq("product_id", product.id)
-      .limit(1)
-
-    const existingItem = items?.[0]
+      .maybeSingle()
 
     if (existingItem) {
       await supabase
@@ -85,11 +90,22 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         .eq("id", existingItem.id)
     } else {
       await supabase.from("cart_items").insert({
-        cart_id: cartId,
+        cart_id: cart.id,
         product_id: product.id,
         quantity,
       })
     }
+
+    toast({
+      title: "Adicionado ao carrinho!",
+      description: `${quantity}x ${product.name}`,
+    })
+  } catch {
+    toast({
+      title: "Erro",
+      description: "Não foi possível adicionar ao carrinho",
+      variant: "destructive",
+    })
   } finally {
     setIsLoading(false)
   }
