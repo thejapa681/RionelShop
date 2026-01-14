@@ -79,30 +79,38 @@ export default function ProductsTable() {
     return formatCurrency(value)
   }
 
-  const handleDelete = async (id: string | number) => {
-    if (!window.confirm("Tem certeza que deseja excluir este produto?")) return
-    const idStr = String(id)
-    setLoadingIds((prev) => [...prev, idStr])
-    try {
-      const res = await fetch(`/api/products/${id}`, { method: "DELETE" })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data?.error || "Erro ao excluir")
-      toast({
-        title: "Produto excluído",
-        description: "O produto foi removido com sucesso",
-        variant: "destructive",
-      })
-      setItems((prev) => prev.filter((p) => p.Teste !== id))
-    } catch (err: any) {
-      toast({
-        title: "Erro",
-        description: err?.message || "Erro inesperado",
-        variant: "destructive",
-      })
-    } finally {
-      setLoadingIds((prev) => prev.filter((i) => i !== idStr))
-    }
+  const handleDelete = async (id: string) => {
+  if (!window.confirm("Tem certeza que deseja excluir este produto?")) return
+
+  setLoadingIds((prev) => [...prev, id])
+
+  try {
+    const supabase = createClient()
+
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("Teste", id) // <- importante usar Teste que é o UUID correto
+
+    if (error) throw error
+
+    toast({
+      title: "Produto excluído",
+      description: "O produto foi removido com sucesso",
+      variant: "destructive",
+    })
+
+    setItems((prev) => prev.filter((p) => p.Teste !== id))
+  } catch (err: any) {
+    toast({
+      title: "Erro",
+      description: err.message || "Erro ao excluir o produto",
+      variant: "destructive",
+    })
+  } finally {
+    setLoadingIds((prev) => prev.filter((i) => i !== id))
   }
+}
 
   if (loading) return <p>Carregando produtos...</p>
 
@@ -232,17 +240,17 @@ export default function ProductsTable() {
                               </Link>
                             </DropdownMenuItem>
 
-                            <DropdownMenuItem
-                              onSelect={(e) => {
-                                e.preventDefault()
-                                handleDelete(product.Teste)
-                              }}
-                              disabled={loadingIds.includes(String(product.Teste))}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Excluir
-                            </DropdownMenuItem>
+                          <DropdownMenuItem
+  onSelect={(e) => {
+    e.preventDefault()
+    handleDelete(product.Teste) // <- usar Teste
+  }}
+  disabled={loadingIds.includes(product.Teste)}
+  className="text-destructive"
+>
+  <Trash2 className="h-4 w-4 mr-2" />
+  Excluir
+</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
