@@ -115,68 +115,63 @@ const handleSubmit = async (e: React.FormEvent) => {
   try {
     const supabase = createClient()
 
-    // Garantir slug único
-    let slug = formData.slug || generateSlug(formData.name)
+    let baseSlug = formData.slug || generateSlug(formData.name)
+    let slug = baseSlug
     let counter = 1
-    let exists = true
-
-    while (exists) {
+    while (true) {
       const { data: existing } = await supabase
         .from("products")
         .select("id")
         .eq("slug", slug)
         .limit(1)
 
-      if (existing && existing.length > 0) {
-        slug = `${generateSlug(formData.name)}-${counter}`
-        counter++
-      } else {
-        exists = false
-      }
+      if (!existing || existing.length === 0) break
+      slug = `${baseSlug}-${counter}`
+      counter++
     }
 
-   // Inserir produto
-const { data: product, error: productError } = await supabase
-  .from("products")
-  .insert({
-    name: formData.name,
-    slug: formData.slug || `produto-${Date.now()}`, // garante slug único
-    description: formData.description,
-    short_description: formData.short_description,
-    sku: formData.sku || `SKU-${Date.now()}`,
-    price: Number.parseFloat(formData.price) || 0,
-    compare_price: formData.compare_price ? Number.parseFloat(formData.compare_price) : null,
-    cost_price: formData.cost_price ? Number.parseFloat(formData.cost_price) : null,
-    stock: Number.parseInt(formData.stock) || 0,
-    category_id: formData.category_id || null,
-    brand: formData.brand || null,
-    weight: formData.weight ? Number.parseFloat(formData.weight) : null,
-    is_active: formData.is_active,
-    is_featured: formData.is_featured,
-    is_new: formData.is_new,
-    colors: colors.length > 0 ? colors : null,
-    sizes: sizes.length > 0 ? sizes : null,
-  })
-  .select("*")
-  .single()
+    const { data: product, error: productError } = await supabase
+      .from("products")
+      .insert({
+        name: formData.name,
+        slug: slug, // usar slug único gerado
+        description: formData.description,
+        short_description: formData.short_description,
+        sku: formData.sku || `SKU-${Date.now()}`,
+        price: Number.parseFloat(formData.price) || 0,
+        compare_price: formData.compare_price ? Number.parseFloat(formData.compare_price) : null,
+        cost_price: formData.cost_price ? Number.parseFloat(formData.cost_price) : null,
+        stock: Number.parseInt(formData.stock) || 0,
+        category_id: formData.category_id || null,
+        brand: formData.brand || null,
+        weight: formData.weight ? Number.parseFloat(formData.weight) : null,
+        is_active: formData.is_active,
+        is_featured: formData.is_featured,
+        is_new: formData.is_new,
+        colors: colors.length > 0 ? colors : null,
+        sizes: sizes.length > 0 ? sizes : null,
+      })
+      .select("id") // pegar somente o id necessário
+      .single()
 
-if (productError || !product?.id) throw productError || new Error("Erro ao criar produto")
+    if (productError || !product?.id)
+      throw productError || new Error("Erro ao criar produto")
 
-// Inserir imagens apenas se houver produto e imagens
-if (images.length > 0) {
-  const imageInserts = images.map((url, index) => ({
-    product_id: product.id,
-    url,
-    is_primary: index === 0,
-    sort_order: index,
-  }))
+    // 3️⃣ Inserir imagens
+    if (images.length > 0) {
+      const imageInserts = images.map((url, index) => ({
+        product_id: product.id, // garantir que exista
+        url,
+        is_primary: index === 0,
+        sort_order: index,
+      }))
 
-  const { error: imageError } = await supabase
-    .from("product_images")
-    .insert(imageInserts)
+      const { error: imageError } = await supabase
+        .from("product_images")
+        .insert(imageInserts)
 
-  if (imageError) throw imageError
-}
+      if (imageError) throw imageError
+    }
 
     toast({
       title: "Produto criado",
