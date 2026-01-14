@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -21,8 +22,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Plus, Search, MoreHorizontal, Pencil, Eye, Trash2 } from "lucide-react"
 import Link from "next/link"
-import { formatCurrency } from "@/lib/utils/format"
 import { useToast } from "@/hooks/use-toast"
+import { formatCurrency } from "@/lib/utils/format"
 
 interface Product {
   Teste: string
@@ -37,19 +38,41 @@ interface Product {
   product_images?: { url: string; is_primary?: boolean }[]
 }
 
-interface ProductsTableProps {
-  products: Product[] | null | undefined
-}
-
-export default function ProductsTable({ products }: ProductsTableProps) {
+export default function ProductsTable() {
   const { toast } = useToast()
+  const [items, setItems] = useState<Product[]>([])
   const [loadingIds, setLoadingIds] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const items =
-    products?.map((p) => ({
-      ...p,
-      id: p.Teste,
-    })) || []
+  useEffect(() => {
+    fetchProducts()
+  }, [])
+
+  const fetchProducts = async () => {
+    const supabase = createClient()
+    const { data, error } = await supabase.from("products").select(`
+      Teste,
+      name,
+      slug,
+      sku,
+      price,
+      compare_price,
+      stock,
+      is_active,
+      category:categories(name),
+      product_images(url,is_primary)
+    `)
+    if (error) {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      })
+    } else if (data) {
+      setItems(data)
+    }
+    setLoading(false)
+  }
 
   const safeCurrency = (value?: number) => {
     if (typeof value !== "number" || isNaN(value)) return "-"
@@ -69,7 +92,7 @@ export default function ProductsTable({ products }: ProductsTableProps) {
         description: "O produto foi removido com sucesso",
         variant: "destructive",
       })
-      setLoadingIds((prev) => prev.filter((i) => i !== idStr))
+      setItems((prev) => prev.filter((p) => p.Teste !== id))
     } catch (err: any) {
       toast({
         title: "Erro",
@@ -80,6 +103,8 @@ export default function ProductsTable({ products }: ProductsTableProps) {
       setLoadingIds((prev) => prev.filter((i) => i !== idStr))
     }
   }
+
+  if (loading) return <p>Carregando produtos...</p>
 
   return (
     <div className="space-y-6">
@@ -123,7 +148,7 @@ export default function ProductsTable({ products }: ProductsTableProps) {
                     product.product_images?.find((img) => img.is_primary)?.url ||
                     product.product_images?.[0]?.url
                   return (
-                    <TableRow key={String(product.id)}>
+                    <TableRow key={product.Teste}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="h-12 w-12 overflow-hidden rounded-lg bg-muted">
@@ -200,7 +225,7 @@ export default function ProductsTable({ products }: ProductsTableProps) {
 
                             <DropdownMenuItem asChild>
                               <Link
-                                href={`/admin/produtos/editar/${product.id}`}
+                                href={`/admin/produtos/editar/${product.Teste}`}
                                 className="flex items-center gap-2"
                               >
                                 <Pencil className="h-4 w-4" /> Editar
@@ -210,9 +235,9 @@ export default function ProductsTable({ products }: ProductsTableProps) {
                             <DropdownMenuItem
                               onSelect={(e) => {
                                 e.preventDefault()
-                                handleDelete(product.id)
+                                handleDelete(product.Teste)
                               }}
-                              disabled={loadingIds.includes(String(product.id))}
+                              disabled={loadingIds.includes(String(product.Teste))}
                               className="text-destructive"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
