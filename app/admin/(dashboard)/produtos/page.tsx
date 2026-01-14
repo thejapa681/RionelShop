@@ -25,7 +25,7 @@ import { formatCurrency } from "@/lib/utils/format"
 import { useToast } from "@/hooks/use-toast"
 
 interface Product {
-  id: string | number
+  Teste: string | number
   name?: string
   slug?: string
   sku?: string
