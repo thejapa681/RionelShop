@@ -172,12 +172,14 @@ export default function ProductsTable() {
                               </div>
                             )}
                           </div>
-                          <div className="truncate">
-                            <p className="font-medium truncate">{product.name || "-"}</p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              SKU: {product.sku || "-"}
-                            </p>
-                          </div>
+                          <div className="min-w-0">
+  <p className="font-medium break-words leading-tight">
+    {product.name || "-"}
+  </p>
+  <p className="text-xs text-muted-foreground break-words">
+    SKU: {product.sku || "-"}
+  </p>
+</div>
                         </div>
                       </TableCell>
 
