@@ -59,7 +59,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       return
     }
 
-    // 1️⃣ Buscar ou criar carrinho
     const { data: carts } = await supabase
       .from("carts")
       .select("id")
@@ -78,28 +77,29 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       cartId = newCart.id
     }
 
-    // 2️⃣ Verificar se o produto já existe no carrinho
     const { data: items } = await supabase
       .from("cart_items")
       .select("id, quantity")
       .eq("cart_id", cartId)
-      .eq("product_ref", product.Teste)
+      .eq("product_id", product.Teste)
       .limit(1)
 
     const existingItem = items?.[0]
 
-    // 3️⃣ Atualizar ou inserir
     if (existingItem) {
       await supabase
         .from("cart_items")
         .update({ quantity: existingItem.quantity + quantity })
         .eq("id", existingItem.id)
     } else {
-      await supabase.from("cart_items").insert({
-        cart_id: cartId,
-        product_ref: product.Teste,
-        quantity,
-      })
+      await supabase
+        .from("cart_items")
+        .insert({
+          cart_id: cartId,
+          product_id: product.Teste,
+          quantity,
+        })
+        .select()
     }
 
     toast({
