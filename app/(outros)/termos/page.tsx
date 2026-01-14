@@ -109,7 +109,7 @@ export default function TermsOfUsePage() {
           <CardTitle>10. Contato</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <p>Em caso de dúvidas sobre os termos de uso, entre em contato pelo e-mail: <strong>suporte@rionelshop.com</strong>.</p>
+          <p>Em caso de dúvidas sobre os termos de uso, entre em contato pelo e-mail: <strong>rionelshopsuporte@gmail.com</strong>.</p>
         </CardContent>
       </Card>
     </div>
