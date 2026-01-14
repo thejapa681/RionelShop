@@ -121,7 +121,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     while (true) {
       const { data: existing } = await supabase
         .from("products")
-        .select("uuid")
+        .select("*")
         .eq("slug", slug)
         .limit(1)
 
@@ -151,7 +151,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         colors: colors.length > 0 ? colors : null,
         sizes: sizes.length > 0 ? sizes : null,
       })
-      .select("uuid, name, slug")
+      .select("name, slug")
       .single()
 
     if (productError || !product?.uuid)
