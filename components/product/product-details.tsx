@@ -40,95 +40,81 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   const discount = product.compare_price ? calculateDiscount(product.price, product.compare_price) : 0
 
   const handleAddToCart = async () => {
-  setIsLoading(true)
+    setIsLoading(true)
 
-  try {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    try {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
-    if (!user) {
+      if (!user) {
+        toast({
+          title: "Faça login",
+          description: "Você precisa estar logado para adicionar ao carrinho",
+          variant: "destructive",
+        })
+        router.push("/entrar?redirect=" + encodeURIComponent(window.location.pathname))
+        return false
+      }
+
+      let { data: cart } = await supabase
+        .from("carts")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle()
+
+      if (!cart) {
+        const { data: newCart } = await supabase
+          .from("carts")
+          .insert({ user_id: user.id })
+          .select("id")
+          .single()
+
+        cart = newCart
+      }
+
+      const { data: existingItem } = await supabase
+        .from("cart_items")
+        .select("id, quantity")
+        .eq("cart_id", cart.id)
+        .eq("product_id", product.id)
+        .maybeSingle()
+
+      if (existingItem) {
+        await supabase
+          .from("cart_items")
+          .update({ quantity: existingItem.quantity + quantity })
+          .eq("id", existingItem.id)
+      } else {
+        await supabase.from("cart_items").insert({
+          cart_id: cart.id,
+          product_id: product.id,
+          quantity,
+        })
+      }
+
       toast({
-        title: "Faça login",
-        description: "Você precisa estar logado para adicionar ao carrinho",
+        title: "Adicionado ao carrinho!",
+        description: `${quantity}x ${product.name}`,
+      })
+
+      return true
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível adicionar ao carrinho",
         variant: "destructive",
       })
-      router.push("/entrar?redirect=" + encodeURIComponent(window.location.pathname))
       return false
+    } finally {
+      setIsLoading(false)
     }
-
-    // 1️⃣ Buscar ou criar carrinho
-    let { data: cart, error: cartError } = await supabase
-      .from("carts")
-      .select("id")
-      .eq("user_id", user.id)
-      .single()
-
-    if (cartError && cartError.code !== "PGRST116") {
-      throw cartError
-    }
-
-    if (!cart) {
-      const { data: newCart, error: createError } = await supabase
-        .from("carts")
-        .insert({ user_id: user.id })
-        .select("id")
-        .single()
-
-      if (createError) throw createError
-      cart = newCart
-    }
-
-    // 2️⃣ Verificar item existente
-    const { data: existingItem, error: itemError } = await supabase
-      .from("cart_items")
-      .select("id, quantity")
-      .eq("cart_id", cart.id)
-      .eq("product_id", product.id)
-      .single()
-
-    if (itemError && itemError.code !== "PGRST116") {
-      throw itemError
-    }
-
-    if (existingItem) {
-      const { error: updateError } = await supabase
-        .from("cart_items")
-        .update({ quantity: existingItem.quantity + quantity })
-        .eq("id", existingItem.id)
-
-      if (updateError) throw updateError
-    } else {
-      const { error: insertError } = await supabase.from("cart_items").insert({
-        cart_id: cart.id,
-        product_id: product.id,
-        quantity,
-      })
-
-      if (insertError) throw insertError
-    }
-
-    toast({
-      title: "Adicionado ao carrinho!",
-      description: `${quantity}x ${product.name}`,
-    })
-
-    return true
-  } catch (error) {
-    console.error(error)
-    toast({
-      title: "Erro",
-      description: "Não foi possível adicionar ao carrinho",
-      variant: "destructive",
-    })
-    return false
-  } finally {
-    setIsLoading(false)
   }
-}
 
   const handleBuyNow = async () => {
-    await handleAddToCart()
-    router.push("/carrinho")
+    const added = await handleAddToCart()
+    if (added) router.push("/carrinho")
   }
 
   const handleToggleFavorite = async () => {
@@ -160,7 +146,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="grid gap-8 lg:grid-cols-2">
-        {/* Images */}
         <div className="space-y-4">
           <div className="relative aspect-square overflow-hidden rounded-2xl bg-secondary">
             <img
@@ -221,7 +206,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           )}
         </div>
 
-        {/* Details */}
         <div className="space-y-6">
           {product.category && (
             <Badge variant="secondary" className="text-xs">
@@ -236,7 +220,11 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
-                  className={`h-5 w-5 ${star <= Math.round(product.rating) ? "fill-yellow-400 text-yellow-400" : "fill-muted text-muted"}`}
+                  className={`h-5 w-5 ${
+                    star <= Math.round(product.rating)
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "fill-muted text-muted"
+                  }`}
                 />
               ))}
               <span className="ml-2 text-sm font-medium">{product.rating.toFixed(1)}</span>
@@ -249,74 +237,20 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
           <div className="space-y-2">
             {product.compare_price && (
-              <p className="text-lg text-muted-foreground line-through">{formatCurrency(product.compare_price)}</p>
+              <p className="text-lg text-muted-foreground line-through">
+                {formatCurrency(product.compare_price)}
+              </p>
             )}
             <div className="flex items-baseline gap-3">
               <span className="text-4xl font-bold text-primary">{formatCurrency(product.price)}</span>
               {discount > 0 && <Badge className="bg-destructive text-destructive-foreground">{discount}% OFF</Badge>}
             </div>
-            <p className="text-sm text-muted-foreground">
-              em até <span className="font-medium text-foreground">12x de {formatCurrency(product.price / 12)}</span>{" "}
-              sem juros
-            </p>
-            <p className="text-sm text-primary">
-              <span className="font-medium">{formatCurrency(product.price * 0.95)}</span> à vista no PIX (5% de
-              desconto)
-            </p>
           </div>
 
           <Separator />
 
-          {product.short_description && <p className="text-muted-foreground">{product.short_description}</p>}
-
-          {/* Quantity */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Quantidade</label>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center rounded-lg border border-border">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 rounded-r-none"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={quantity <= 1}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  type="number"
-                  value={quantity}
-                  onChange={(e) =>
-                    setQuantity(Math.max(1, Math.min(product.stock, Number.parseInt(e.target.value) || 1)))
-                  }
-                  className="h-10 w-16 rounded-none border-x border-y-0 text-center"
-                  min={1}
-                  max={product.stock}
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 rounded-l-none"
-                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  disabled={quantity >= product.stock}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              <span className="text-sm text-muted-foreground">
-                {product.stock > 0 ? `${product.stock} disponíveis` : "Esgotado"}
-              </span>
-            </div>
-          </div>
-
-          {/* Actions */}
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Button
-              size="lg"
-              className="flex-1 gap-2"
-              onClick={handleBuyNow}
-              disabled={isLoading || product.stock === 0}
-            >
+            <Button size="lg" className="flex-1 gap-2" onClick={handleBuyNow} disabled={isLoading || product.stock === 0}>
               Comprar Agora
             </Button>
             <Button
@@ -344,7 +278,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
           <Separator />
 
-          {/* Benefits */}
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="flex items-center gap-3 rounded-lg bg-secondary p-3">
               <Truck className="h-5 w-5 text-primary" />
@@ -369,17 +302,13 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             </div>
           </div>
 
-          {/* Description */}
           {product.description && (
             <div className="space-y-3">
               <h3 className="font-semibold">Descrição</h3>
-              <div className="prose prose-sm prose-invert max-w-none">
-                <p className="whitespace-pre-wrap text-muted-foreground">{product.description}</p>
-              </div>
+              <p className="whitespace-pre-wrap text-muted-foreground">{product.description}</p>
             </div>
           )}
 
-          {/* SKU */}
           {product.sku && <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>}
         </div>
       </div>
