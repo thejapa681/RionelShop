@@ -154,7 +154,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 `/placeholder.svg?height=600&width=600&query=${encodeURIComponent(product.name) || "/placeholder.svg"}`
               }
               alt={product.name}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain max-h-full max-w-full"
             />
             {discount > 0 && (
               <Badge className="absolute left-4 top-4 bg-destructive text-destructive-foreground">-{discount}%</Badge>
@@ -198,7 +198,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   <img
                     src={image.url || "/placeholder.svg"}
                     alt={image.alt_text || product.name}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain"
                   />
                 </button>
               ))}
