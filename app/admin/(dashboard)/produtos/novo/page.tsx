@@ -121,7 +121,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     while (true) {
       const { data: existing } = await supabase
         .from("products")
-        .select("id")
+        .select("uuid")
         .eq("slug", slug)
         .limit(1)
 
@@ -134,7 +134,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       .from("products")
       .insert({
         name: formData.name,
-        slug: slug, // usar slug único gerado
+        slug: slug,
         description: formData.description,
         short_description: formData.short_description,
         sku: formData.sku || `SKU-${Date.now()}`,
@@ -151,16 +151,15 @@ const handleSubmit = async (e: React.FormEvent) => {
         colors: colors.length > 0 ? colors : null,
         sizes: sizes.length > 0 ? sizes : null,
       })
-      .select("name, slug")
+      .select("uuid, name, slug")
       .single()
 
-    if (productError || !product?.id)
+    if (productError || !product?.uuid)
       throw productError || new Error("Erro ao criar produto")
 
-    // 3️⃣ Inserir imagens
     if (images.length > 0) {
       const imageInserts = images.map((url, index) => ({
-        product_id: product.id, // garantir que exista
+        product_id: product.uuid,
         url,
         is_primary: index === 0,
         sort_order: index,
