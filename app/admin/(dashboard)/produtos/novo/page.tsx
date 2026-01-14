@@ -136,7 +136,7 @@ try {
     colors: colors.length > 0 ? colors : null,
     sizes: sizes.length > 0 ? sizes : null,
   })
-  .select("id")
+  .select("product_id")
   .single()
 
 if (productError || !product) throw productError || new Error("Erro ao criar produto")
