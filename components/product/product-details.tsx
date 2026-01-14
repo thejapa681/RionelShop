@@ -151,27 +151,32 @@ export function ProductDetails({ product }: ProductDetailsProps) {
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="space-y-4">
-          <div className="relative aspect-square overflow-hidden rounded-2xl bg-secondary">
-            <Image
-              src={
-                images[selectedImage]?.url ||
-                `/placeholder.svg?height=600&width=600&query=${encodeURIComponent(product.name)}`
-              }
-              alt={product.name}
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-contain"
-            />
+          <div className="relative w-full max-w-[520px] mx-auto overflow-hidden rounded-2xl bg-secondary">
+            <div className="relative h-[520px] w-full">
+              <Image
+                src={
+                  images[selectedImage]?.url ||
+                  `/placeholder.svg?height=600&width=600`
+                }
+                alt={product.name}
+                fill
+                sizes="520px"
+                className="object-contain"
+              />
+            </div>
+
             {discount > 0 && (
               <Badge className="absolute left-4 top-4 bg-destructive text-destructive-foreground">
                 -{discount}%
               </Badge>
             )}
+
             {product.is_new && (
               <Badge className="absolute left-4 top-12 bg-primary text-primary-foreground">
                 Novo
               </Badge>
             )}
+
             {images.length > 1 && (
               <>
                 <Button
@@ -199,7 +204,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           </div>
 
           {images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <div className="flex gap-2 overflow-x-auto pb-2 max-w-[520px] mx-auto">
               {images.map((image, index) => (
                 <button
                   key={image.id}
