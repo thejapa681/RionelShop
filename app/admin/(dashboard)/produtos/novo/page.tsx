@@ -157,7 +157,7 @@ const { data: product, error: productError } = await supabase
     colors: colors.length > 0 ? colors : null,
     sizes: sizes.length > 0 ? sizes : null,
   })
-  .select("id") // só precisamos do id para inserir imagens
+  .select("*")
   .single()
 
 if (productError || !product?.id) throw productError || new Error("Erro ao criar produto")
