@@ -121,7 +121,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     while (true) {
       const { data: existing } = await supabase
         .from("products")
-        .select("*")
+        .select("Teste")
         .eq("slug", slug)
         .limit(1)
 
@@ -151,7 +151,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         colors: colors.length > 0 ? colors : null,
         sizes: sizes.length > 0 ? sizes : null,
       })
-      .select("name, slug")
+      .select("Teste")
       .single()
 
     if (productError || !product?.uuid)
@@ -159,7 +159,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     if (images.length > 0) {
       const imageInserts = images.map((url, index) => ({
-        product_id: product.uuid,
+        product_id: product.Teste,
         url,
         is_primary: index === 0,
         sort_order: index,
