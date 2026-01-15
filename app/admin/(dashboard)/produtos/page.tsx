@@ -174,11 +174,11 @@ export default function ProductsTable() {
                           </div>
                         <div className="min-w-0">
   <p className="font-medium leading-tight whitespace-pre-line">
-    {breakEvery20(product.name)}
+    {breakEvery20(product?.name)}
   </p>
 
   <p className="text-xs text-muted-foreground whitespace-pre-line">
-    SKU: {breakEvery20(product.sku)}
+    SKU: {breakEvery20(product?.sku)}
   </p>
 </div>
                         </div>
