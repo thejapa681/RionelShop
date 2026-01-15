@@ -150,7 +150,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="grid gap-8 lg:grid-cols-2">
-        <div className="space-y-4">
+        <div className="relative space-y-4">
           <div className="relative w-full max-w-[520px] mx-auto overflow-hidden rounded-2xl bg-secondary">
             <div className="relative w-full aspect-square max-h-[90vw] sm:max-h-[520px]">
               <Image
