@@ -151,19 +151,20 @@ export function ProductDetails({ product }: ProductDetailsProps) {
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="space-y-4">
-          <div className="relative w-full max-w-[520px] mx-auto overflow-hidden rounded-2xl bg-secondary">
-            <div className="relative h-[520px] w-full">
-              <Image
-                src={
-                  images[selectedImage]?.url ||
-                  `/placeholder.svg?height=600&width=600`
-                }
-                alt={product.name}
-                fill
-                sizes="520px"
-                className="object-contain"
-              />
-            </div>
+         <div className="relative w-full max-w-[520px] mx-auto overflow-hidden rounded-2xl bg-secondary">
+  <div className="relative w-full aspect-square max-h-[90vw] sm:max-h-[520px]">
+    <Image
+      src={
+        images[selectedImage]?.url ||
+        `/placeholder.svg?height=600&width=600`
+      }
+      alt={product?.name || "Produto"}
+      fill
+      sizes="(max-width: 640px) 90vw, 520px"
+      className="object-contain"
+    />
+  </div>
+</div>
 
             {discount > 0 && (
               <Badge className="absolute left-4 top-4 bg-destructive text-destructive-foreground">
