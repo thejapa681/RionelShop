@@ -164,10 +164,10 @@ export function Footer() {
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-center text-sm text-muted-foreground">© 2026 Rionel. Todos os direitos reservados.</p>
             <div className="flex items-center gap-2">
-              <img src="/visa-card-logo.png" alt="Visa" className="h-6" />
+             {/* <img src="/visa-card-logo.png" alt="Visa" className="h-6" />
               <img src="/mastercard-logo.png" alt="Mastercard" className="h-6" />
               <img src="/abstract-geometric-logo.png" alt="Pix" className="h-6" />
-              <img src="/generic-payment-slip-logo.png" alt="Boleto" className="h-6" />
+              <img src="/generic-payment-slip-logo.png" alt="Boleto" className="h-6" /> */}
             </div>
           </div>
         </div>
