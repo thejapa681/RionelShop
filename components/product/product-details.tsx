@@ -1,4 +1,4 @@
-"use client" 
+"use client"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -148,19 +148,17 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 overflow-x-hidden">
       <div className="grid gap-8 lg:grid-cols-2">
-        <div className="relative space-y-4">
-          <div className="relative w-full max-w-[520px] mx-auto overflow-hidden rounded-2xl bg-secondary">
-            <div className="relative w-full aspect-square max-h-[90vw] sm:max-h-[520px]">
-              <Image
-                src={images[selectedImage]?.url || `/placeholder.svg?height=600&width=600`}
-                alt={product?.name || "Produto"}
-                fill
-                sizes="(max-width: 640px) 90vw, 520px"
-                className="object-contain"
-              />
-            </div>
+        <div className="relative w-full overflow-hidden">
+          <div className="relative w-full aspect-square sm:max-w-[520px] sm:mx-auto overflow-hidden rounded-2xl bg-secondary">
+            <Image
+              src={images[selectedImage]?.url || "/placeholder.svg"}
+              alt={product?.name || "Produto"}
+              fill
+              sizes="100vw, (min-width: 640px) 520px"
+              className="object-contain"
+            />
 
             {discount > 0 && (
               <Badge className="absolute left-4 top-4 bg-destructive text-destructive-foreground">
@@ -202,7 +200,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           </div>
 
           {images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-2 max-w-[520px] mx-auto">
+            <div className="flex gap-2 overflow-x-auto max-w-full py-2">
               {images.map((image, index) => (
                 <button
                   key={image.id}
@@ -233,7 +231,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
           <h1 className="text-2xl font-bold md:text-3xl">{product.name}</h1>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
@@ -249,11 +247,9 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 {product.rating.toFixed(1)}
               </span>
             </div>
-            <Separator orientation="vertical" className="h-4" />
             <span className="text-sm text-muted-foreground">
               {product.review_count} avaliações
             </span>
-            <Separator orientation="vertical" className="h-4" />
             <span className="text-sm text-muted-foreground">
               {product.sold_count} vendidos
             </span>
@@ -265,7 +261,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                 {formatCurrency(product.compare_price)}
               </p>
             )}
-            <div className="flex items-baseline gap-3">
+            <div className="flex items-baseline gap-3 flex-wrap">
               <span className="text-4xl font-bold text-primary">
                 {formatCurrency(product.price)}
               </span>
@@ -279,10 +275,10 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
           <Separator />
 
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3">
             <Button
               size="lg"
-              className="flex-1 gap-2"
+              className="w-full gap-2"
               onClick={handleBuyNow}
               disabled={isLoading || product.stock === 0}
             >
@@ -291,7 +287,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             <Button
               size="lg"
               variant="outline"
-              className="flex-1 gap-2 bg-transparent"
+              className="w-full gap-2 bg-transparent"
               onClick={handleAddToCart}
               disabled={isLoading || product.stock === 0}
             >
@@ -300,7 +296,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             </Button>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             <Button variant="ghost" size="sm" className="gap-2" onClick={handleToggleFavorite}>
               <Heart
                 className={`h-4 w-4 ${
