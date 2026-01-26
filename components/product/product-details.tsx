@@ -285,6 +285,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
               Comprar Agora
             </Button>
             <Button
+              type="button"
               size="lg"
               variant="outline"
               className="w-full gap-2 bg-transparent"
