@@ -36,6 +36,7 @@ export default function CartPage() {
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false)
 
   useEffect(() => {
+    router.refresh()
     fetchCart()
   }, [])
 
@@ -145,73 +146,13 @@ export default function CartPage() {
     toast({ title: "Item removido do carrinho" })
   }
 
-  const applyCoupon = async () => {
-    if (!couponCode.trim()) return
-
-    setIsApplyingCoupon(true)
-    const supabase = createClient()
-
-    const { data: coupon, error } = await supabase
-      .from("coupons")
-      .select("*")
-      .eq("code", couponCode.toUpperCase())
-      .eq("is_active", true)
-      .maybeSingle()
-
-    if (error || !coupon) {
-      toast({
-        title: "Cupom inválido",
-        description: "O cupom informado não existe ou expirou",
-        variant: "destructive",
-      })
-      setIsApplyingCoupon(false)
-      return
-    }
-
-    if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
-      toast({
-        title: "Cupom expirado",
-        description: "Este cupom não é mais válido",
-        variant: "destructive",
-      })
-      setIsApplyingCoupon(false)
-      return
-    }
-
-    if (coupon.min_purchase && subtotal < coupon.min_purchase) {
-      toast({
-        title: "Valor mínimo não atingido",
-        description: `Este cupom requer compra mínima de ${formatCurrency(coupon.min_purchase)}`,
-        variant: "destructive",
-      })
-      setIsApplyingCoupon(false)
-      return
-    }
-
-    setAppliedCoupon(coupon)
-    toast({
-      title: "Cupom aplicado!",
-      description: coupon.description,
-    })
-    setIsApplyingCoupon(false)
-  }
-
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0,
   )
 
-  const discountAmount = appliedCoupon
-    ? appliedCoupon.discount_type === "percentage"
-      ? Math.min(
-          (subtotal * appliedCoupon.discount_value) / 100,
-          appliedCoupon.max_discount || Number.POSITIVE_INFINITY,
-        )
-      : appliedCoupon.discount_value
-    : 0
-
   const shippingCost = subtotal >= 199 ? 0 : 15.9
-  const total = subtotal - discountAmount + shippingCost
+  const total = subtotal + shippingCost
 
   if (isLoading) {
     return (
@@ -279,55 +220,9 @@ export default function CartPage() {
                         >
                           {item.product.name}
                         </Link>
-                        {item.product.compare_price && (
-                          <p className="text-sm text-muted-foreground line-through">
-                            {formatCurrency(item.product.compare_price)}
-                          </p>
-                        )}
                         <p className="text-lg font-bold text-primary">
                           {formatCurrency(item.product.price)}
                         </p>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center rounded-lg border border-border">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-r-none"
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity - 1)
-                            }
-                            disabled={item.quantity <= 1}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="w-10 text-center text-sm">
-                            {item.quantity}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-l-none"
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity + 1)
-                            }
-                            disabled={
-                              item.quantity >= item.product.stock
-                            }
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
-
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => removeItem(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </div>
                     </div>
 
@@ -343,32 +238,6 @@ export default function CartPage() {
               </Card>
             )
           })}
-        </div>
-
-        <div className="lg:sticky lg:top-24 lg:self-start">
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle>Resumo do Pedido</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button
-                className="w-full gap-2"
-                size="lg"
-                onClick={() => router.push("/checkout")}
-              >
-                Finalizar Compra
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-
-              <Button
-                variant="outline"
-                className="w-full bg-transparent"
-                asChild
-              >
-                <Link href="/">Continuar Comprando</Link>
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
