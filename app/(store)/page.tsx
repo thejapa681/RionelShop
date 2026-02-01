@@ -1,3 +1,5 @@
+"use server"
+
 import { createClient } from "@/lib/supabase/server"
 import { BannerCarousel } from "@/components/ui/banner-carousel"
 import { CategoryGrid } from "@/components/ui/category-grid"
@@ -12,7 +14,7 @@ import type { Product, Category, Banner } from "@/lib/types"
 export default async function HomePage() {
   const supabase = await createClient()
 
-  // Fetch banners
+  // Banners
   const { data: banners } = await supabase
     .from("banners")
     .select("*")
@@ -20,10 +22,14 @@ export default async function HomePage() {
     .eq("position", "home")
     .order("sort_order")
 
-  // Fetch categories
-  const { data: categories } = await supabase.from("categories").select("*").eq("is_active", true).order("sort_order")
+  // Categorias
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort_order")
 
-  // Fetch featured products
+  // Produtos em destaque
   const { data: featuredProducts } = await supabase
     .from("products")
     .select("*, images:product_images(*)")
@@ -32,7 +38,7 @@ export default async function HomePage() {
     .order("sold_count", { ascending: false })
     .limit(10)
 
-  // Fetch new products
+  // Produtos novos
   const { data: newProducts } = await supabase
     .from("products")
     .select("*, images:product_images(*)")
@@ -41,7 +47,7 @@ export default async function HomePage() {
     .order("created_at", { ascending: false })
     .limit(10)
 
-  // Fetch best sellers
+  // Mais vendidos
   const { data: bestSellers } = await supabase
     .from("products")
     .select("*, images:product_images(*)")
@@ -49,7 +55,7 @@ export default async function HomePage() {
     .order("sold_count", { ascending: false })
     .limit(10)
 
-  // Fetch deals (products with compare_price)
+  // Ofertas (compare_price != null)
   const { data: deals } = await supabase
     .from("products")
     .select("*, images:product_images(*)")
@@ -60,12 +66,13 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Banner */}
+
+      {/* Banner principal */}
       <section className="mx-auto max-w-7xl px-4 py-4 md:py-6">
         <BannerCarousel banners={(banners as Banner[]) || []} />
       </section>
 
-      {/* Flash Deals */}
+      {/* Ofertas Relâmpago */}
       <section className="mx-auto max-w-7xl px-4 py-6">
         <div className="rounded-2xl bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 p-4 md:p-6">
           <div className="mb-4 flex items-center justify-between">
@@ -82,6 +89,7 @@ export default async function HomePage() {
               <Link href="/ofertas">Ver mais</Link>
             </Button>
           </div>
+
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
             {(deals as Product[])?.slice(0, 4).map((product) => (
               <ProductCard key={product.id} product={product} />
@@ -90,21 +98,25 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
+      {/* Categorias */}
       <section className="mx-auto max-w-7xl px-4 py-6">
         <CategoryGrid categories={(categories as Category[]) || []} />
       </section>
 
-      {/* Featured Products */}
+      {/* Destaques */}
       <section className="mx-auto max-w-7xl px-4 py-6">
         <div className="mb-4 flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
           <h2 className="text-xl font-bold md:text-2xl">Destaques</h2>
         </div>
-        <ProductCarousel title="" products={(featuredProducts as Product[]) || []} viewAllLink="/destaques" />
+        <ProductCarousel
+          title=""
+          products={(featuredProducts as Product[]) || []}
+          viewAllLink="/destaques"
+        />
       </section>
 
-      {/* New Products */}
+      {/* Novidades */}
       <section className="mx-auto max-w-7xl px-4 py-6">
         <div className="mb-4 flex items-center gap-2">
           <Clock className="h-5 w-5 text-primary" />
@@ -113,10 +125,14 @@ export default async function HomePage() {
             Recém chegados
           </Badge>
         </div>
-        <ProductCarousel title="" products={(newProducts as Product[]) || []} viewAllLink="/novidades" />
+        <ProductCarousel
+          title=""
+          products={(newProducts as Product[]) || []}
+          viewAllLink="/novidades"
+        />
       </section>
 
-      {/* Promo Banner */}
+      {/* Banner promocional */}
       <section className="mx-auto max-w-7xl px-4 py-6">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-accent p-6 md:p-12">
           <div className="relative z-10">
@@ -124,25 +140,32 @@ export default async function HomePage() {
               <Gift className="mr-1 h-3 w-3" />
               Oferta Especial
             </Badge>
-            <h2 className="mb-2 text-2xl font-bold text-foreground md:text-4xl">Cupom de Boas-Vindas</h2>
+
+            <h2 className="mb-2 text-2xl font-bold text-foreground md:text-4xl">
+              Cupom de Boas-Vindas
+            </h2>
+
             <p className="mb-4 text-foreground/80 md:text-lg">
               Use o cupom BEMVINDO10 e ganhe 10% OFF na primeira compra!
             </p>
+
             <Button variant="secondary" size="lg" asChild>
               <Link href="/cupons">Resgatar Cupom</Link>
             </Button>
           </div>
+
           <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-background/10 blur-3xl" />
           <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-background/10 blur-3xl" />
         </div>
       </section>
 
-      {/* Best Sellers */}
+      {/* Mais vendidos */}
       <section className="mx-auto max-w-7xl px-4 py-6">
         <div className="mb-4 flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" />
           <h2 className="text-xl font-bold md:text-2xl">Mais Vendidos</h2>
         </div>
+
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5 md:gap-4">
           {(bestSellers as Product[])?.map((product) => (
             <ProductCard key={product.id} product={product} />
@@ -150,14 +173,16 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* All Products */}
+      {/* Todos os produtos */}
       <section className="mx-auto max-w-7xl px-4 py-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold md:text-2xl">Todos os Produtos</h2>
+
           <Button variant="outline" asChild>
             <Link href="/produtos">Ver todos</Link>
           </Button>
         </div>
+
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5 md:gap-4">
           {(featuredProducts as Product[])?.slice(0, 10).map((product) => (
             <ProductCard key={product.id} product={product} />
