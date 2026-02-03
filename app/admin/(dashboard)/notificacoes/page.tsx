@@ -22,17 +22,24 @@ export default function AdminNotificationsPage() {
     title: "",
     message: "",
     type: "info",
-    target: "all",
+    target: "customer", // padrão
   })
 
   useEffect(() => {
     fetchUserCount()
-  }, [])
+  }, [formData.target])
 
   const fetchUserCount = async () => {
     const supabase = createClient()
-    const { count } = await supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "customer")
-    setUserCount(count || 0)
+
+    const { count, error } = await supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("role", formData.target)
+
+    if (!error) {
+      setUserCount(count || 0)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,35 +49,25 @@ export default function AdminNotificationsPage() {
     try {
       const supabase = createClient()
 
-      // Get all users
-      const { data: users } = await supabase.from("profiles").select("id").eq("role", "customer")
-
-      if (!users || users.length === 0) {
-        throw new Error("Nenhum usuário encontrado")
-      }
-
-      // Create notifications for all users
-      const notifications = users.map((user) => ({
-        user_id: user.id,
-        title: formData.title,
-        message: formData.message,
-        type: formData.type,
-      }))
-
-      const { error } = await supabase.from("notifications").insert(notifications)
+      const { error } = await supabase.rpc("send_notification_by_role", {
+        p_title: formData.title,
+        p_message: formData.message,
+        p_type: formData.type,
+        p_role: formData.target,
+      })
 
       if (error) throw error
 
       toast({
         title: "Notificações enviadas",
-        description: `Notificação enviada para ${users.length} usuários`,
+        description: `Notificação enviada para ${userCount} ${formData.target === "admin" ? "admins" : "usuários"}`,
       })
 
       setFormData({
         title: "",
         message: "",
         type: "info",
-        target: "all",
+        target: formData.target,
       })
     } catch (error: any) {
       toast({
@@ -94,16 +91,37 @@ export default function AdminNotificationsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Nova Notificação</CardTitle>
-            <CardDescription>Envie uma notificação para todos os usuários</CardDescription>
+            <CardDescription>Envie uma notificação</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+
+              <div className="space-y-2">
+                <Label>Enviar para</Label>
+                <Select
+                  value={formData.target}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, target: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="customer">Usuários</SelectItem>
+                    <SelectItem value="admin">Admins</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="title">Título</Label>
                 <Input
                   id="title"
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   placeholder="Ex: Nova promoção disponível!"
                   required
                 />
@@ -114,7 +132,9 @@ export default function AdminNotificationsPage() {
                 <Textarea
                   id="message"
                   value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, message: e.target.value })
+                  }
                   placeholder="Digite a mensagem da notificação..."
                   rows={4}
                   required
@@ -123,7 +143,12 @@ export default function AdminNotificationsPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="type">Tipo</Label>
-                <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
+                <Select
+                  value={formData.type}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, type: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -156,12 +181,16 @@ export default function AdminNotificationsPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Usuários Ativos</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {formData.target === "admin" ? "Admins Ativos" : "Usuários Ativos"}
+              </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{userCount}</div>
-              <p className="text-xs text-muted-foreground">usuários receberão a notificação</p>
+              <p className="text-xs text-muted-foreground">
+                receberão a notificação
+              </p>
             </CardContent>
           </Card>
 
