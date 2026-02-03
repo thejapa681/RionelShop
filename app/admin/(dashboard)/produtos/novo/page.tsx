@@ -148,6 +148,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         weight: formData.weight ? Number.parseFloat(formData.weight) : null,
         is_active: formData.is_active,
         is_featured: formData.is_featured,
+        product_link: formData.product_link || null,
         is_new: formData.is_new,
         colors: colors.length > 0 ? colors : null,
         sizes: sizes.length > 0 ? sizes : null,
