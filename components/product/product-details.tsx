@@ -111,9 +111,18 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   }
 
   const handleBuyNow = async () => {
-    const added = await handleAddToCart()
-    if (added) router.push("/carrinho")
+  if (!product.product_link) {
+    toast({
+      title: "Link indisponível",
+      description: "Este produto não possui link de compra.",
+      variant: "destructive",
+    })
+    return
   }
+
+  // abre em nova aba
+  window.open(product.product_link, "_blank")
+}
 
   const handleToggleFavorite = async () => {
     const supabase = createClient()
