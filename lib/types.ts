@@ -249,3 +249,10 @@ export interface Favorite {
   created_at: string
   product?: Product
 }
+
+export interface Product {
+  id: string
+  name: string
+  price: number
+  product_link?: string
+}
