@@ -15,9 +15,11 @@ import { Loader2, ArrowLeft, Plus, X } from "lucide-react"
 import Link from "next/link"
 import type { Category } from "@/lib/types"
 
-interface EditProductProps {
-  params: { id: string }
-}
+import { useParams } from "next/navigation"
+
+const params = useParams()
+
+console.log("ID:", params.id)
 
 export default function EditProductPage({ params }: EditProductProps) {
   const router = useRouter()
