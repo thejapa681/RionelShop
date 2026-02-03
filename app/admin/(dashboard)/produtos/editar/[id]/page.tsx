@@ -105,35 +105,75 @@ export default function EditProductPage() {
   const removeSize = (index: number) => setSizes(sizes.filter((_, i) => i !== index))
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    try {
-      await supabase.from("products").update({
-  ...formData,
-  product_link: `/produto/${formData.slug}`,
+  e.preventDefault()
+  setIsLoading(true)
+
+  try {
+    const { error } = await supabase
+      .from("products")
+      .update({
+        ...formData,
+        product_link: formData.product_link || `/produto/${formData.slug}`,
         price: Number.parseFloat(formData.price) || 0,
-        compare_price: formData.compare_price ? Number.parseFloat(formData.compare_price) : null,
-        cost_price: formData.cost_price ? Number.parseFloat(formData.cost_price) : null,
+        compare_price: formData.compare_price
+          ? Number.parseFloat(formData.compare_price)
+          : null,
+        cost_price: formData.cost_price
+          ? Number.parseFloat(formData.cost_price)
+          : null,
         stock: Number.parseInt(formData.stock) || 0,
-        weight: formData.weight ? Number.parseFloat(formData.weight) : null,
+        weight: formData.weight
+          ? Number.parseFloat(formData.weight)
+          : null,
         colors: colors.length > 0 ? colors : null,
         sizes: sizes.length > 0 ? sizes : null,
-      }).eq("Teste", id)
+      })
+      .eq("Teste", id)
 
-      if (images.length > 0) {
-        await supabase.from("product_images").delete().eq("product_id", id)
-        const inserts = images.map((url, i) => ({ product_id: id, url, is_primary: i === 0, sort_order: i }))
-        await supabase.from("product_images").insert(inserts)
-      }
+    if (error) throw error
 
-      toast({ title: "Produto atualizado", description: "Alterações salvas com sucesso!" })
-      router.push("/admin/produtos")
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message || "Erro ao atualizar produto", variant: "destructive" })
-    } finally {
-      setIsLoading(false)
+    // Atualiza imagens
+    if (images.length > 0) {
+      const { error: deleteError } = await supabase
+        .from("product_images")
+        .delete()
+        .eq("product_id", id)
+
+      if (deleteError) throw deleteError
+
+      const inserts = images.map((url, i) => ({
+        product_id: id,
+        url,
+        is_primary: i === 0,
+        sort_order: i,
+      }))
+
+      const { error: insertError } = await supabase
+        .from("product_images")
+        .insert(inserts)
+
+      if (insertError) throw insertError
     }
+
+    toast({
+      title: "Produto atualizado",
+      description: "Alterações salvas com sucesso!",
+    })
+
+    router.push("/admin/produtos")
+
+  } catch (err: any) {
+    console.error("ERRO AO SALVAR:", err)
+
+    toast({
+      title: "Erro ao salvar",
+      description: err.message || "Falha ao atualizar produto",
+      variant: "destructive",
+    })
+  } finally {
+    setIsLoading(false)
   }
+}
 
   return (
     <div className="space-y-6">
