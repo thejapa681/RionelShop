@@ -34,6 +34,7 @@ export default function EditProductPage({ params }: EditProductProps) {
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
+    product_link: "",
     description: "",
     short_description: "",
     sku: "",
@@ -68,6 +69,7 @@ export default function EditProductPage({ params }: EditProductProps) {
     setFormData({
       name: data.name,
       slug: data.slug,
+      product_link: data.product_link || "",
       description: data.description,
       short_description: data.short_description,
       sku: data.sku,
@@ -167,6 +169,18 @@ export default function EditProductPage({ params }: EditProductProps) {
                   <Label htmlFor="description">Descrição Completa</Label>
                   <Textarea id="description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={5} />
                 </div>
+<div className="space-y-2">
+  <Label htmlFor="product_link">Link do Produto</Label>
+  <Input
+    id="product_link"
+    type="url"
+    placeholder="https://exemplo.com/produto"
+    value={formData.product_link}
+    onChange={(e) =>
+      setFormData({ ...formData, product_link: e.target.value })
+    }
+  />
+</div>
               </CardContent>
             </Card>
 
