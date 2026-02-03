@@ -36,6 +36,7 @@ stock: "0",
 category_id: "",
 brand: "",
 weight: "",
+product_link: "",
 is_active: true,
 is_featured: false,
 is_new: true,
@@ -255,6 +256,18 @@ return (
                 rows={5}  
               />  
             </div>  
+<div className="space-y-2">
+  <Label htmlFor="product_link">Link do Produto</Label>
+  <Input
+    id="product_link"
+    type="url"
+    placeholder="https://exemplo.com/produto"
+    value={formData.product_link}
+    onChange={(e) =>
+      setFormData({ ...formData, product_link: e.target.value })
+    }
+  />
+</div>
           </CardContent>  
         </Card>  
 <Card>
