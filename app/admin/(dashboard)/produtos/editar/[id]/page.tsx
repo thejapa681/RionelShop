@@ -44,6 +44,7 @@ export default function EditProductPage({ params }: EditProductProps) {
     category_id: "",
     brand: "",
     weight: "",
+    product_link: "",
     is_active: true,
     is_featured: false,
     is_new: true,
