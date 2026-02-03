@@ -15,11 +15,11 @@ import { Loader2, ArrowLeft, Plus, X } from "lucide-react"
 import Link from "next/link"
 import type { Category } from "@/lib/types"
 
-interface EditProductProps {
-  params: { id: string }
-}
+import { useParams } from "next/navigation"
 
-export default function EditProductPage({ params }: EditProductProps) {
+export default function EditProductPage() {
+  const params = useParams()
+  const id = params?.id as string
   const router = useRouter()
   const { toast } = useToast()
   const supabase = createClient()
@@ -61,8 +61,7 @@ export default function EditProductPage({ params }: EditProductProps) {
   }
 
   const fetchProduct = async () => {
-console.log("ID recebido:", params.id)
-    const { data, error } = await supabase.from("products").select("*").eq("Teste", params.id).maybeSingle()
+    const { data, error } = await supabase.from("products").select("*").eq("Teste", id).maybeSingle()
     if (error || !data) {
       toast({ title: "Erro", description: "Produto não encontrado", variant: "destructive" })
       return
@@ -119,11 +118,11 @@ console.log("ID recebido:", params.id)
         weight: formData.weight ? Number.parseFloat(formData.weight) : null,
         colors: colors.length > 0 ? colors : null,
         sizes: sizes.length > 0 ? sizes : null,
-      }).eq("Teste", params.id)
+      }).eq("Teste", id)
 
       if (images.length > 0) {
-        await supabase.from("product_images").delete().eq("product_id", params.id)
-        const inserts = images.map((url, i) => ({ product_id: params.id, url, is_primary: i === 0, sort_order: i }))
+        await supabase.from("product_images").delete().eq("product_id", id)
+        const inserts = images.map((url, i) => ({ product_id: id, url, is_primary: i === 0, sort_order: i }))
         await supabase.from("product_images").insert(inserts)
       }
 
