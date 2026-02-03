@@ -60,7 +60,7 @@ export default function EditProductPage({ params }: EditProductProps) {
   }
 
   const fetchProduct = async () => {
-    const { data, error } = await supabase.from("products").select("*").eq("Teste", params.id).single()
+    const { data, error } = await supabase.from("products").select("*").eq("Teste", params.id).maybeSingle()
     if (error || !data) {
       toast({ title: "Erro", description: "Produto não encontrado", variant: "destructive" })
       return
