@@ -60,7 +60,7 @@ export default function EditProductPage({ params }: EditProductProps) {
   }
 
   const fetchProduct = async () => {
-    const { data, error } = await supabase.from("products").select("*").eq("id", params.id).maybeSingle()
+    const { data, error } = await supabase.from("products").select("*").eq("Teste", params.id).maybeSingle()
     if (error || !data) {
       toast({ title: "Erro", description: "Produto não encontrado", variant: "destructive" })
       return
@@ -115,7 +115,7 @@ export default function EditProductPage({ params }: EditProductProps) {
         weight: formData.weight ? Number.parseFloat(formData.weight) : null,
         colors: colors.length > 0 ? colors : null,
         sizes: sizes.length > 0 ? sizes : null,
-      }).eq("id", params.id)
+      }).eq("Teste", params.id)
 
       if (images.length > 0) {
         await supabase.from("product_images").delete().eq("product_id", params.id)
