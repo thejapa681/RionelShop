@@ -44,7 +44,6 @@ export default function EditProductPage({ params }: EditProductProps) {
     category_id: "",
     brand: "",
     weight: "",
-    product_link: "",
     is_active: true,
     is_featured: false,
     is_new: true,
@@ -108,7 +107,8 @@ export default function EditProductPage({ params }: EditProductProps) {
     setIsLoading(true)
     try {
       await supabase.from("products").update({
-        ...formData,
+  ...formData,
+  product_link: `/produto/${formData.slug}`,
         price: Number.parseFloat(formData.price) || 0,
         compare_price: formData.compare_price ? Number.parseFloat(formData.compare_price) : null,
         cost_price: formData.cost_price ? Number.parseFloat(formData.cost_price) : null,
