@@ -51,9 +51,11 @@ export default function EditProductPage() {
   })
 
   useEffect(() => {
-    fetchCategories()
-    fetchProduct()
-  }, [])
+  if (!id) return
+
+  fetchCategories()
+  fetchProduct()
+}, [id])
 
   const fetchCategories = async () => {
     const { data } = await supabase.from("categories").select("*").eq("is_active", true).order("name")
@@ -61,6 +63,7 @@ export default function EditProductPage() {
   }
 
   const fetchProduct = async () => {
+  if (!id) return
     const { data, error } = await supabase.from("products").select("*").eq("Teste", id).maybeSingle()
     if (error || !data) {
       toast({ title: "Erro", description: "Produto não encontrado", variant: "destructive" })
