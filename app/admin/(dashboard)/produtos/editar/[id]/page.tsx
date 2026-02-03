@@ -116,6 +116,7 @@ export default function EditProductPage() {
       .from("products")
       .update({
         ...formData,
+category_id: formData.category_id || null,
         product_link: formData.product_link || `/produto/${formData.slug}`,
         price: Number.parseFloat(formData.price) || 0,
         compare_price: formData.compare_price
