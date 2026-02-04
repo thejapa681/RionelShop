@@ -59,6 +59,43 @@ const { data } = await supabase.from("categories").select("*").eq("is_active", t
 if (data) setCategories(data)
 }
 
+const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.8): Promise<File> => {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const canvas = document.createElement("canvas")
+    const ctx = canvas.getContext("2d")!
+
+    img.onload = () => {
+      let { width, height } = img
+
+      if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height)
+        width *= ratio
+        height *= ratio
+      }
+
+      canvas.width = width
+      canvas.height = height
+
+      ctx.drawImage(img, 0, 0, width, height)
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return
+          const resizedFile = new File([blob], file.name, {
+            type: "image/jpeg",
+          })
+          resolve(resizedFile)
+        },
+        "image/jpeg",
+        quality
+      )
+    }
+
+    img.src = URL.createObjectURL(file)
+  })
+}
+
 const generateSlug = (name: string) => {
 return name
 .toLowerCase()
@@ -282,34 +319,64 @@ return (
       <Plus className="mr-2 h-5 w-5" />
       <span className="font-medium">Adicionar imagem</span>
 
-      <input
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={async (e) => {
-  const file = e.target.files?.[0]
-  if (!file) return
+<input
+  type="file"
+  accept="image/*"
+  multiple
+  className="hidden"
+  onChange={async (e) => {
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
 
-  const supabase = createClient()
+    setIsLoading(true)
+    const supabase = createClient()
 
-  const ext = file.name.split(".").pop()
-  const fileName = `${crypto.randomUUID()}.${ext}`
+    try {
+      const uploadedUrls: string[] = []
 
-  const { error: uploadError } = await supabase.storage
-    .from("products")
-    .upload(fileName, file, {
-      upsert: true,
-      contentType: file.type,
-    })
+      for (const file of files) {
+        const resizedFile = await resizeImage(file)
 
-  if (uploadError) {
-    toast({
-      title: "Erro",
-      description: uploadError.message,
-      variant: "destructive",
-    })
-    return
-  }
+        const fileName = `${crypto.randomUUID()}.jpg`
+
+        const { error: uploadError } = await supabase.storage
+          .from("products")
+          .upload(fileName, resizedFile, {
+            upsert: true,
+            contentType: "image/jpeg",
+          })
+
+        if (uploadError) {
+          toast({
+            title: "Erro ao enviar imagem",
+            description: uploadError.message,
+            variant: "destructive",
+          })
+          continue
+        }
+
+        const { data } = supabase.storage
+          .from("products")
+          .getPublicUrl(fileName)
+
+        if (data?.publicUrl) {
+          uploadedUrls.push(data.publicUrl)
+        }
+      }
+
+      setImages((prev) => [...prev, ...uploadedUrls])
+    } catch (err) {
+      toast({
+        title: "Erro",
+        description: "Falha ao processar imagens",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+      e.currentTarget.value = ""
+    }
+  }}
+/>
 
   const { data } = supabase.storage
   .from("products")
