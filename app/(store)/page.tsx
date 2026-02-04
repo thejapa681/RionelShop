@@ -81,8 +81,7 @@ export default async function HomePage() {
                 <Flame className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
-                <h2 className="text-lg font-bold md:text-xl">Ofertas Relâmpago</h2>
-                <p className="text-xs text-muted-foreground md:text-sm">Termina em 02:34:56</p>
+                <h2 className="text-lg font-bold md:text-xl">Ofertas Imperdíveis</h2>
               </div>
             </div>
             <Button variant="outline" size="sm" asChild>
